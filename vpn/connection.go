@@ -29,7 +29,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait) / 2
-	maxMessageSize = 1024 * 1024
+	maxMessageSize = 1024 * 1024 //1MB
 )
 
 type connection struct {
@@ -37,7 +37,7 @@ type connection struct {
 	ws        *websocket.Conn
 	server    *VpnServer
 	data      chan *Data
-	state     int
+	state     int // STATE_INIT / STATE_CONNECTED
 	ipAddress *net.IPNet
 }
 
@@ -49,23 +49,21 @@ var upgrader = websocket.Upgrader{
 var maxId int = 0
 
 func NewConnection(ws *websocket.Conn, server *VpnServer) *connection {
-
-	logger.Debug("New connection created")
-
 	if ws == nil {
 		panic("ws cannot be nil")
 	}
-
 	if server == nil {
 		panic("server cannot be nil")
 	}
 
+	// auto inc
 	maxId++
 	data := make(chan *Data)
-
 	c := &connection{maxId, ws, server, data, STATE_INIT, nil}
+
 	go c.writePump()
 	go c.readPump()
+	logger.Debug("New connection created")
 
 	return c
 }
@@ -76,15 +74,21 @@ func (c *connection) readPump() {
 		c.ws.Close()
 	}()
 
+	// If a message exceeds the limit, the connection sends a close message to the peer
 	c.ws.SetReadLimit(maxMessageSize)
+
+	// heartbeat
+	// SetPingHandler sets the handler for ping messages received from the peer, default pong
 	c.ws.SetPingHandler(func(string) error {
 		logger.Debug("Ping received")
+		// WriteControl writes a control message with the given 10s deadline.
 		if err := c.ws.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
-			logger.Error("Send ping error", err)
+			logger.Errorf("Send ping error:%+v", err)
 		}
 		return nil
 	})
 
+	// continue to read
 	for {
 		messageType, r, err := c.ws.ReadMessage()
 		if err == io.EOF {
@@ -95,7 +99,6 @@ func (c *connection) readPump() {
 			c.cleanUp()
 			break
 		} else {
-
 			if messageType == websocket.TextMessage {
 				c.dispatcher(r)
 			}
@@ -106,10 +109,10 @@ func (c *connection) readPump() {
 func (c *connection) writePump() {
 
 	defer func() {
-
 		c.ws.Close()
 	}()
 
+	// continue to write
 	for {
 		if c != nil {
 			select {
@@ -127,7 +130,6 @@ func (c *connection) writePump() {
 				} else {
 					break
 				}
-
 			}
 		} else {
 			break
@@ -140,11 +142,13 @@ func (c *connection) write(mt int, message *Data) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 
 	if message.ConnectionState == STATE_CONNECTED {
+		// write payload
 		err := c.ws.WriteMessage(mt, message.Payload)
 		if err != nil {
 			return err
 		}
 	} else {
+		// write payload+connectionState
 		s, err := json.Marshal(message)
 		if err != nil {
 			logger.Panic(err)
@@ -168,29 +172,34 @@ func (c *connection) dispatcher(p []byte) {
 		if err := json.Unmarshal(p, &message); err != nil {
 			logger.Panic(err)
 		}
+		// receive client connect message
 		if message.ConnectionState == STATE_CONNECT {
-			d := new(Data)
+			d := &Data{}
 			d.ConnectionState = STATE_CONNECT
 			cltIP, err := c.server.ippool.next()
 			if err != nil {
 				c.cleanUp()
 				logger.Error(err)
 			}
-			logger.Debug("Next IP from ippool", cltIP)
-			c.ipAddress = cltIP
+			logger.Infof("get next IP from ippool %+v", cltIP)
 			d.Payload = []byte(cltIP.String())
+
+			// change connection parameter
+			c.ipAddress = cltIP
 			c.state = STATE_CONNECTED
+			// after connected, register
 			c.server.register <- c
 			c.data <- d
-
 		}
 	case STATE_CONNECTED:
+		// if connected, write to channel(tun0
 		logger.Debug("STATE_CONNECTED")
 		c.server.toIface <- p
 	}
 }
 
 func (c *connection) cleanUp() {
+	// client close connection
 	c.server.unregister <- c
 	c.ws.Close()
 }

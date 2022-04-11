@@ -24,13 +24,11 @@ var logger = loging.GetLogger()
 var MTU = 1400
 
 const (
-	IFACE_BUFSIZE = 2000
+	IFACE_BUFSIZE = 2048
 )
 
 const (
-	STATE_INIT = 0
-
-	STATE_CONNECT = 1
-
+	STATE_INIT      = 0
+	STATE_CONNECT   = 1
 	STATE_CONNECTED = 2
 )

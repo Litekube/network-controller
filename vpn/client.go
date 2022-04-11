@@ -42,17 +42,12 @@ type Client struct {
 	// interface
 	iface *water.Interface
 	// ip addr
-	ip net.IP
-
+	ip      net.IP
 	toIface chan []byte
-
-	ws *websocket.Conn
-
-	data chan *Data
-
-	state int
-
-	routes []string
+	ws      *websocket.Conn
+	data    chan *Data
+	state   int
+	routes  []string
 }
 
 var net_gateway, net_nic string
@@ -64,7 +59,7 @@ func NewClient(cfg ClientConfig) error {
 		MTU = cfg.MTU
 	}
 
-	client := new(Client)
+	client := &Client{}
 	client.cfg = cfg
 
 	client.toIface = make(chan []byte, 100)
@@ -258,11 +253,13 @@ func (clt *Client) write(mt int, message *Data) error {
 
 }
 
+// client exit gracefully
 func (clt *Client) cleanUp() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
 	logger.Info("Cleaning Up")
+	// redirectGateway = true
 	delRoute("0.0.0.0/1")
 	delRoute("128.0.0.0/1")
 	for _, dest := range clt.routes {

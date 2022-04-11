@@ -35,6 +35,7 @@ var invalidAddr = errors.New("Invalid device ip address")
 
 var tun_peer net.IP
 
+// create tun interface
 func newTun(name string) (iface *water.Interface, err error) {
 
 	iface, err = water.New(water.Config{})
@@ -45,8 +46,9 @@ func newTun(name string) (iface *water.Interface, err error) {
 
 	sargs := fmt.Sprintf("link set dev %s up mtu %d qlen 100", iface.Name(), MTU)
 	args := strings.Split(sargs, " ")
+	// exec script
 	cmd := exec.Command("ip", args...)
-	logger.Infof("ip %s", sargs)
+	logger.Infof("exec command: ip %s", sargs)
 	err = cmd.Run()
 	if err != nil {
 		return nil, err
@@ -57,30 +59,41 @@ func newTun(name string) (iface *water.Interface, err error) {
 
 func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) {
 	ip = ip.To4()
-	logger.Debug("IP address ", ip)
+	logger.Info("parse vpnaddr ip:%+v,subnet:%+v", ip, subnet)
+	// 10.1.1.1 valid & 10.1.1.2 invalid
 	if ip[3]%2 == 0 {
 		return invalidAddr
 	}
 
+	// 4 bytes for ipv4
 	peer := net.IP(make([]byte, 4))
 	copy([]byte(peer), []byte(ip))
 	peer[3]++
+	// 10.1.1.1+1
 	tun_peer = peer
 
+	// assign ip for tun0
+	// ip addr add dev tun0 local 10.1.1.1 peer 10.1.1.2
 	sargs := fmt.Sprintf("addr add dev %s local %s peer %s", iface.Name(), ip, peer)
 	args := strings.Split(sargs, " ")
 	cmd := exec.Command("ip", args...)
-	logger.Info("ip ", sargs)
+	logger.Infof("ip %+v", sargs)
 	err = cmd.Run()
 	if err != nil {
 		return err
 	}
 
+	// des 10.1.1.0/24，gateway to 10.1.1.2
+	// ip route add 10.1.1.0/24 via 10.1.1.2 dev tun0
 	sargs = fmt.Sprintf("route add %s via %s dev %s", subnet, peer, iface.Name())
 	args = strings.Split(sargs, " ")
 	cmd = exec.Command("ip", args...)
-	logger.Info("ip ", sargs)
+	logger.Infof("ip %+v", sargs)
 	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 

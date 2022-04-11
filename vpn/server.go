@@ -44,7 +44,7 @@ type VpnServer struct {
 	ippool *VpnIpPool
 	// client peers, key is the mac address, value is a HopPeer record
 
-	// Registered clients
+	// Registered clients clientip-connection
 	clients map[string]*connection
 
 	// Register requests
@@ -76,6 +76,8 @@ func NewServer(cfg ServerConfig) error {
 		return err
 	}
 	vpnServer.iface = iface
+
+	// vpnaddr = 10.1.1.1/24
 	ip, subnet, err := net.ParseCIDR(cfg.VpnAddr)
 	err = setTunIP(iface, ip, subnet)
 	if err != nil {
@@ -96,8 +98,8 @@ func NewServer(cfg ServerConfig) error {
 
 	vpnServer.handleInterface()
 
+	// http handle for client to connect
 	http.HandleFunc("/ws", vpnServer.serveWs)
-
 	addr := fmt.Sprintf(":%d", vpnServer.cfg.Port)
 	err = http.ListenAndServe(addr, nil)
 	if err != nil {
@@ -109,55 +111,55 @@ func NewServer(cfg ServerConfig) error {
 
 }
 
-func (srv *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
+func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-
+	// client http to ws
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
-
-	NewConnection(ws, srv)
-
+	NewConnection(ws, server)
 }
 
-func (srv *VpnServer) run() {
+func (server *VpnServer) run() {
 	for {
 		select {
-		case c := <-srv.register:
-			logger.Info("Connection registered:", c.ipAddress.IP.String())
-			srv.clients[c.ipAddress.IP.String()] = c
+		case c := <-server.register:
+			// add to clients
+			logger.Infof("Connection registered:%+v", c.ipAddress.IP.String())
+			server.clients[c.ipAddress.IP.String()] = c
 			break
 
-		case c := <-srv.unregister:
+		case c := <-server.unregister:
+			// remove from clients
+			// close connection data channel
+			// release client ip
 			clientIP := c.ipAddress.IP.String()
-			_, ok := srv.clients[clientIP]
+			_, ok := server.clients[clientIP]
 			if ok {
-				delete(srv.clients, clientIP)
+				delete(server.clients, clientIP)
 				close(c.data)
 				if c.ipAddress != nil {
-					srv.ippool.relase(c.ipAddress.IP)
+					server.ippool.release(c.ipAddress.IP)
 				}
-				logger.Info("Connection removed:", c.ipAddress.IP)
-				logger.Info("Number active clients:", len(srv.clients))
+				logger.Infof("removed Connection:%+v, current active clients number:%+v", c.ipAddress.IP, len(server.clients))
 			}
 			break
-
 		}
 	}
 }
 
-func (srv *VpnServer) handleInterface() {
+func (server *VpnServer) handleInterface() {
 	// network packet to interface
 	go func() {
 		for {
-			hp := <-srv.toIface
+			hp := <-server.toIface
 			logger.Debug("Write to interface")
-			_, err := srv.iface.Write(hp)
+			_, err := server.iface.Write(hp)
 			if err != nil {
 				logger.Error(err.Error())
 				return
@@ -166,59 +168,64 @@ func (srv *VpnServer) handleInterface() {
 		}
 	}()
 
+	// interface to network packet
 	go func() {
 		packet := make([]byte, IFACE_BUFSIZE)
 		for {
-			plen, err := srv.iface.Read(packet)
+			plen, err := server.iface.Read(packet)
 			if err != nil {
 				logger.Error(err)
 				break
 			}
 			header, _ := ipv4.ParseHeader(packet[:plen])
-			logger.Debug("Try sending: ", header)
+			logger.Debugf("Try sending: %+v", header)
 			clientIP := header.Dst.String()
-			client, ok := srv.clients[clientIP]
+			client, ok := server.clients[clientIP]
 			if ok {
-				if !srv.cfg.Interconnection {
-					if srv.isConnectionBetweenClients(header) {
-						logger.Info("Drop connection betwenn ", header.Src, header.Dst)
+				// config file "interconnection=false" not allowed connection between clients
+				if !server.cfg.Interconnection {
+					if server.isConnectionBetweenClients(header) {
+						logger.Infof("Drop connection betwenn %+v and %+v", header.Src, header.Dst)
 						continue
 					}
 				}
 
-				logger.Debug("Sending to client: ", client.ipAddress)
+				logger.Debugf("Sending to client: %+v", client.ipAddress)
 				client.data <- &Data{
 					ConnectionState: STATE_CONNECTED,
 					Payload:         packet[:plen],
 				}
 
 			} else {
-				logger.Warning("Client not found ", clientIP)
+				logger.Warningf("Client not found: %+v", clientIP)
 			}
-
 		}
 	}()
 }
 
-func (srv *VpnServer) isConnectionBetweenClients(header *ipv4.Header) bool {
+func (server *VpnServer) isConnectionBetweenClients(header *ipv4.Header) bool {
 
-	if header.Src.String() != header.Dst.String() && header.Src.String() != srv.ipnet.IP.String() && srv.ippool.subnet.Contains(header.Dst) {
+	// srcip!= server ip & desip=one client ip
+	if header.Src.String() != header.Dst.String() && header.Src.String() != server.ipnet.IP.String() && server.ippool.subnet.Contains(header.Dst) {
 		return true
 	}
-
 	return false
 }
 
-func (srv *VpnServer) cleanUp() {
+// server exit gracefully
+func (server *VpnServer) cleanUp() {
 
 	c := make(chan os.Signal, 1)
+	// watch ctrl+c or kill pid
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
 	logger.Debug("clean up")
-	for key, client := range srv.clients {
+	// close all client connection
+	for key, client := range server.clients {
 		client.ws.Close()
-		delete(srv.clients, key)
+		delete(server.clients, key)
 	}
 
+	// code zero indicates success
 	os.Exit(0)
 }
