@@ -59,7 +59,7 @@ func newTun(name string) (iface *water.Interface, err error) {
 
 func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) {
 	ip = ip.To4()
-	logger.Info("parse vpnaddr ip:%+v,subnet:%+v", ip, subnet)
+	logger.Infof("parse vpnaddr ip:%+v,subnet:%+v", ip, subnet)
 	// 10.1.1.1 valid & 10.1.1.2 invalid
 	if ip[3]%2 == 0 {
 		return invalidAddr
@@ -77,7 +77,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 	sargs := fmt.Sprintf("addr add dev %s local %s peer %s", iface.Name(), ip, peer)
 	args := strings.Split(sargs, " ")
 	cmd := exec.Command("ip", args...)
-	logger.Infof("ip %+v", sargs)
+	logger.Infof("exec command: ip %+v", sargs)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 	sargs = fmt.Sprintf("route add %s via %s dev %s", subnet, peer, iface.Name())
 	args = strings.Split(sargs, " ")
 	cmd = exec.Command("ip", args...)
-	logger.Infof("ip %+v", sargs)
+	logger.Infof("exec command: ip %+v", sargs)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 }
 
 // return net gateway (default route) and nic
-func getNetGateway() (gw, dev string, err error) {
+func GetNetGateway() (gw, dev string, err error) {
 
 	file, err := os.Open("/proc/net/route")
 	if err != nil {
@@ -108,71 +108,87 @@ func getNetGateway() (gw, dev string, err error) {
 	defer file.Close()
 	rd := bufio.NewReader(file)
 
+	// divide into four parts: 006BA8C0 - 192.168.107.0
 	s2byte := func(s string) byte {
+		// each part 8bit, ox
 		b, _ := strconv.ParseUint(s, 16, 8)
 		return byte(b)
 	}
 
+	// skip title row
+	rd.ReadLine()
 	for {
 		line, isPrefix, err := rd.ReadLine()
 
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Errorf("GetNetGateway err:%+v", err.Error())
+			if err.Error() == "EOF" {
+				return "", "", errors.New("No default gateway found")
+			}
 			return "", "", err
 		}
+		// isPrefix=true indicate Line Too Long
 		if isPrefix {
 			return "", "", errors.New("Line Too Long!")
 		}
+
+		/*
+			line example:
+			Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRT
+			ens160	00000000	026BA8C0	0003	0		0	0		00000000	0	0		0
+		*/
 		buf := bytes.NewBuffer(line)
 		scanner := bufio.NewScanner(buf)
+		// split text by space
 		scanner.Split(bufio.ScanWords)
 		tokens := make([]string, 0, 8)
 
 		for scanner.Scan() {
 			tokens = append(tokens, scanner.Text())
 		}
-
+		logger.Infof("len=%+v,tokens=%+v", len(tokens), tokens)
 		iface := tokens[0]
 		dest := tokens[1]
 		gw := tokens[2]
 		mask := tokens[7]
 
+		// find default interface: dest & mast = 0.0.0.0
 		if bytes.Equal([]byte(dest), []byte("00000000")) &&
 			bytes.Equal([]byte(mask), []byte("00000000")) {
+			// divide into four parts
 			a := s2byte(gw[6:8])
 			b := s2byte(gw[4:6])
 			c := s2byte(gw[2:4])
 			d := s2byte(gw[0:2])
-
+			// order is reversed 006BA8C0 - 192.168.107.0
 			ip := net.IPv4(a, b, c, d)
 
 			return ip.String(), iface, nil
 		}
-
 	}
-	return "", "", errors.New("No default gateway found")
 }
 
 // add route
 func addRoute(dest, nextHop, iface string) {
 
+	// ip -4 r a 101.43.253.110/32 via 192.168.107.2 dev ens160
 	scmd := fmt.Sprintf("ip -4 r a %s via %s dev %s", dest, nextHop, iface)
 	cmd := exec.Command("bash", "-c", scmd)
-	logger.Info(scmd)
+	logger.Infof("exec command: %+v", scmd)
 	err := cmd.Run()
 
 	if err != nil {
 		logger.Warning(err.Error())
 	}
-
 }
 
 // delete route
 func delRoute(dest string) {
 	sargs := fmt.Sprintf("-4 route del %s", dest)
 	args := strings.Split(sargs, " ")
+	// todo unify command format
 	cmd := exec.Command("ip", args...)
-	logger.Info("ip %s", sargs)
+	logger.Infof("exec command: ip %s", sargs)
 	err := cmd.Run()
 
 	if err != nil {

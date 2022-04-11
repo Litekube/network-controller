@@ -41,7 +41,7 @@ func main() {
 
 	checkerr := func(err error) {
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Errorf("main err:%+v", err.Error())
 			os.Exit(1)
 		}
 	}

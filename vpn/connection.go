@@ -79,6 +79,7 @@ func (c *connection) readPump() {
 
 	// heartbeat
 	// SetPingHandler sets the handler for ping messages received from the peer, default pong
+	// server receive ping, send pong
 	c.ws.SetPingHandler(func(string) error {
 		logger.Debug("Ping received")
 		// WriteControl writes a control message with the given 10s deadline.
@@ -192,7 +193,7 @@ func (c *connection) dispatcher(p []byte) {
 			c.data <- d
 		}
 	case STATE_CONNECTED:
-		// if connected, write to channel(tun0
+		// if connected, write to channel(tun0)
 		logger.Debug("STATE_CONNECTED")
 		c.server.toIface <- p
 	}

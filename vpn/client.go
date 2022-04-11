@@ -47,7 +47,8 @@ type Client struct {
 	ws      *websocket.Conn
 	data    chan *Data
 	state   int
-	routes  []string
+	// store route des ip
+	routes []string
 }
 
 var net_gateway, net_nic string
@@ -74,46 +75,44 @@ func NewClient(cfg ClientConfig) error {
 	}
 	client.iface = iface
 
-	net_gateway, net_nic, err = getNetGateway()
+	net_gateway, net_nic, err = GetNetGateway()
 	logger.Debug("Net Gateway: ", net_gateway, net_nic)
 	if err != nil {
-		logger.Error("Net gateway error")
+		logger.Error("NewClient GetNetGateway err:%+v", err)
 		return err
 	}
+
 	srvDest := cfg.Server + "/32"
 	addRoute(srvDest, net_gateway, net_nic)
 	client.routes = append(client.routes, srvDest)
 
+	// build ws connect to vpn server
 	srvAdr := fmt.Sprintf("%s:%d", cfg.Server, cfg.Port)
 	u := url.URL{Scheme: "ws", Host: srvAdr, Path: "/ws"}
 	logger.Debug("Connecting to ", u.String())
 
-	ticker := time.NewTicker(time.Second * 4)
-	defer ticker.Stop()
-
+	// continue to try to connect every 2s until success
+	// todo multiple vpnserver auto select
+	// fix here, conenct immediately，then 2s
+	// ticker := time.NewTicker(3 * time.Second)
 	var connection *websocket.Conn
-
 	for ok := true; ok; ok = (connection == nil) {
-		select {
-		case <-ticker.C:
-			connection, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-			if err != nil {
-				logger.Info("Dial: ", err)
-			} else {
-				ticker.Stop()
-			}
-			break
+		connection, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+		if err != nil {
+			logger.Info("Dial: ", err)
 		}
+		time.Sleep(2 * time.Second)
 	}
-
 	client.ws = connection
-
 	defer connection.Close()
 
+	// init state
 	client.state = STATE_INIT
 
 	client.ws.SetReadLimit(maxMessageSize)
 	client.ws.SetReadDeadline(time.Now().Add(pongWait))
+	// client send ping, receive pong
+	// SetPongHandler sets the handler for pong messages received from the peer.
 	client.ws.SetPongHandler(func(string) error {
 		client.ws.SetReadDeadline(time.Now().Add(pongWait))
 		logger.Debug("Pong received")
@@ -138,123 +137,121 @@ func NewClient(cfg ClientConfig) error {
 			}
 			break
 		} else {
-
 			if messageType == websocket.TextMessage {
 				client.dispatcher(r)
 			}
-
 		}
-
 	}
 	return errors.New("Not expected to exit")
 }
 
-func (clt *Client) dispatcher(p []byte) {
-	logger.Debug("Dispatcher: ", clt.state)
-	switch clt.state {
+func (client *Client) dispatcher(p []byte) {
+	logger.Debug("Dispatcher: ", client.state)
+	switch client.state {
 	case STATE_INIT:
 		logger.Debug("STATE_INIT")
 		var message Data
 		if err := json.Unmarshal(p, &message); err != nil {
-			clt.ws.Close()
-			close(clt.data)
+			client.ws.Close()
+			close(client.data)
 			logger.Panic(err)
 		}
 		if message.ConnectionState == STATE_CONNECT {
 
 			ipStr := string(message.Payload)
 			ip, subnet, _ := net.ParseCIDR(ipStr)
-			setTunIP(clt.iface, ip, subnet)
-			if clt.cfg.RedirectGateway {
-				err := redirectGateway(clt.iface.Name(), tun_peer.String())
+			setTunIP(client.iface, ip, subnet)
+			if client.cfg.RedirectGateway {
+				err := redirectGateway(client.iface.Name(), tun_peer.String())
 				if err != nil {
 					logger.Error("Redirect gateway error", err.Error())
 				}
 			}
 
-			clt.state = STATE_CONNECTED
-			clt.handleInterface()
+			client.state = STATE_CONNECTED
+			client.handleInterface()
 		}
 	case STATE_CONNECTED:
-		clt.toIface <- p
-
+		// write data to local interface channel
+		client.toIface <- p
 	}
 }
 
-func (clt *Client) handleInterface() {
+func (client *Client) handleInterface() {
 	// network packet to interface
 	go func() {
 		for {
-			hp := <-clt.toIface
-			_, err := clt.iface.Write(hp)
+			hp := <-client.toIface
+			_, err := client.iface.Write(hp)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Errorf("handleInterface write iface err:%+v", err)
 				return
 			}
 			logger.Debug("Write to interface")
 		}
 	}()
 
+	// interface to network packet
 	go func() {
 		packet := make([]byte, IFACE_BUFSIZE)
 		for {
-			plen, err := clt.iface.Read(packet)
+			plen, err := client.iface.Read(packet)
 			if err != nil {
-				logger.Error(err)
+				logger.Errorf("handleInterface read iface err:%+v", err)
 				break
 			}
-			clt.data <- &Data{
+			client.data <- &Data{
 				ConnectionState: STATE_CONNECTED,
 				Payload:         packet[:plen],
 			}
-
 		}
 	}()
 }
 
-func (clt *Client) writePump() {
+func (client *Client) writePump() {
 
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
 		ticker.Stop()
-		clt.ws.Close()
+		client.ws.Close()
 	}()
 
 	for {
 		select {
-		case message, ok := <-clt.data:
+		case message, ok := <-client.data:
 			if !ok {
-				clt.write(websocket.CloseMessage, &Data{})
+				client.write(websocket.CloseMessage, &Data{})
 				return
 			}
-			if err := clt.write(websocket.TextMessage, message); err != nil {
+			if err := client.write(websocket.TextMessage, message); err != nil {
 				logger.Error("writePump error", err)
 			}
 		case <-ticker.C:
-			if err := clt.ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
+			// heartbeat 30s
+			if err := client.ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(writeWait)); err != nil {
 				logger.Error("Send ping error", err)
 			}
 		}
 	}
 }
 
-func (clt *Client) write(mt int, message *Data) error {
+func (client *Client) write(mt int, message *Data) error {
 
 	if message.ConnectionState == STATE_CONNECTED {
-		return clt.ws.WriteMessage(mt, message.Payload)
+		return client.ws.WriteMessage(mt, message.Payload)
 	} else {
 		s, err := json.Marshal(message)
 		if err != nil {
 			logger.Panic(err)
 		}
-		return clt.ws.WriteMessage(mt, s)
+		return client.ws.WriteMessage(mt, s)
 	}
 
 }
 
 // client exit gracefully
-func (clt *Client) cleanUp() {
+func (client *Client) cleanUp() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
@@ -262,7 +259,7 @@ func (clt *Client) cleanUp() {
 	// redirectGateway = true
 	delRoute("0.0.0.0/1")
 	delRoute("128.0.0.0/1")
-	for _, dest := range clt.routes {
+	for _, dest := range client.routes {
 		delRoute(dest)
 	}
 
