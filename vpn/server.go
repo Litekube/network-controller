@@ -130,7 +130,7 @@ func (server *VpnServer) run() {
 		select {
 		case c := <-server.register:
 			// add to clients
-			logger.Infof("Connection registered:%+v", c.ipAddress.IP.String())
+			logger.Infof("Connection registered: %+v", c.ipAddress.IP.String())
 			server.clients[c.ipAddress.IP.String()] = c
 			break
 
@@ -146,7 +146,7 @@ func (server *VpnServer) run() {
 				if c.ipAddress != nil {
 					server.ippool.release(c.ipAddress.IP)
 				}
-				logger.Infof("removed Connection:%+v, current active clients number:%+v", c.ipAddress.IP, len(server.clients))
+				logger.Infof("unregister Connection: %+v, current active clients number: %+v", c.ipAddress.IP, len(server.clients))
 			}
 			break
 		}

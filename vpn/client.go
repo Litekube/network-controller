@@ -76,9 +76,9 @@ func NewClient(cfg ClientConfig) error {
 	client.iface = iface
 
 	net_gateway, net_nic, err = GetNetGateway()
-	logger.Debug("Net Gateway: ", net_gateway, net_nic)
+	logger.Debugf("Net gateway:%+v, nic:%+v", net_gateway, net_nic)
 	if err != nil {
-		logger.Error("NewClient GetNetGateway err:%+v", err)
+		logger.Error(err)
 		return err
 	}
 
@@ -89,7 +89,7 @@ func NewClient(cfg ClientConfig) error {
 	// build ws connect to vpn server
 	srvAdr := fmt.Sprintf("%s:%d", cfg.Server, cfg.Port)
 	u := url.URL{Scheme: "ws", Host: srvAdr, Path: "/ws"}
-	logger.Debug("Connecting to ", u.String())
+	logger.Debugf("Connecting to %+v", u.String())
 
 	// continue to try to connect every 2s until success
 	// todo multiple vpnserver auto select
@@ -99,7 +99,7 @@ func NewClient(cfg ClientConfig) error {
 	for ok := true; ok; ok = (connection == nil) {
 		connection, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 		if err != nil {
-			logger.Info("Dial: ", err)
+			logger.Infof("Dial: %+v", err)
 		}
 		time.Sleep(2 * time.Second)
 	}
@@ -129,7 +129,7 @@ func NewClient(cfg ClientConfig) error {
 	for {
 		messageType, r, err := connection.ReadMessage()
 		if err != nil {
-			logger.Error("Read error:", err)
+			logger.Error(err)
 			delRoute("0.0.0.0/1")
 			delRoute("128.0.0.0/1")
 			for _, dest := range client.routes {
@@ -146,7 +146,7 @@ func NewClient(cfg ClientConfig) error {
 }
 
 func (client *Client) dispatcher(p []byte) {
-	logger.Debug("Dispatcher: ", client.state)
+	logger.Debugf("Dispatcher client state: %+v", client.state)
 	switch client.state {
 	case STATE_INIT:
 		logger.Debug("STATE_INIT")
@@ -164,7 +164,7 @@ func (client *Client) dispatcher(p []byte) {
 			if client.cfg.RedirectGateway {
 				err := redirectGateway(client.iface.Name(), tun_peer.String())
 				if err != nil {
-					logger.Error("Redirect gateway error", err.Error())
+					logger.Errorf("Redirect gateway error: %+v", err.Error())
 				}
 			}
 
@@ -197,7 +197,7 @@ func (client *Client) handleInterface() {
 		for {
 			plen, err := client.iface.Read(packet)
 			if err != nil {
-				logger.Errorf("handleInterface read iface err:%+v", err)
+				logger.Errorf("handleInterface read iface err: %+v", err)
 				break
 			}
 			client.data <- &Data{
@@ -225,7 +225,7 @@ func (client *Client) writePump() {
 				return
 			}
 			if err := client.write(websocket.TextMessage, message); err != nil {
-				logger.Error("writePump error", err)
+				logger.Errorf("client.write err: %+v", err)
 			}
 		case <-ticker.C:
 			// heartbeat 30s

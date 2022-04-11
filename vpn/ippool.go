@@ -69,7 +69,7 @@ func (p *VpnIpPool) release(ip net.IP) {
 		// if normal, return nil
 		// if panic, return panic err and recover normal,continue to execute
 		if err := recover(); err != nil {
-			logger.Errorf("release err:%v", err)
+			logger.Error(err)
 		}
 	}()
 

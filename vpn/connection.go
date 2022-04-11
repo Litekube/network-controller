@@ -120,13 +120,13 @@ func (c *connection) writePump() {
 			case message, ok := <-c.data:
 				// Thread can be still active after close connection
 				if message != nil {
-					logger.Debug("writePump data len: ", len(message.Payload))
+					logger.Debugf("writePump data len: %+v", len(message.Payload))
 					if !ok {
 						c.write(websocket.CloseMessage, &Data{})
 						return
 					}
 					if err := c.write(websocket.TextMessage, message); err != nil {
-						logger.Error("writePump error", err)
+						logger.Errorf("writePump err:%+v", err)
 					}
 				} else {
 					break
@@ -165,7 +165,7 @@ func (c *connection) write(mt int, message *Data) error {
 }
 
 func (c *connection) dispatcher(p []byte) {
-	logger.Debug("Dispatcher: ", c.state)
+	logger.Debug("Dispatcher connection %+v state: ", c.ipAddress, c.state)
 	switch c.state {
 	case STATE_INIT:
 		logger.Debug("STATE_INIT")

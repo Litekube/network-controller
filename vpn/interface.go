@@ -22,13 +22,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/songgao/water"
+	"io"
 	"net"
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
-
-	"github.com/songgao/water"
 )
 
 var invalidAddr = errors.New("Invalid device ip address")
@@ -44,11 +43,10 @@ func newTun(name string) (iface *water.Interface, err error) {
 	}
 	logger.Infof("created interface %v", iface.Name())
 
-	sargs := fmt.Sprintf("link set dev %s up mtu %d qlen 100", iface.Name(), MTU)
-	args := strings.Split(sargs, " ")
 	// exec script
-	cmd := exec.Command("ip", args...)
-	logger.Infof("exec command: ip %s", sargs)
+	scmd := fmt.Sprintf("ip link set dev %s up mtu %d qlen 100", iface.Name(), MTU)
+	cmd := exec.Command("bash", "-c", scmd)
+	logger.Infof("exec command: ip %s", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return nil, err
@@ -74,10 +72,9 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 
 	// assign ip for tun0
 	// ip addr add dev tun0 local 10.1.1.1 peer 10.1.1.2
-	sargs := fmt.Sprintf("addr add dev %s local %s peer %s", iface.Name(), ip, peer)
-	args := strings.Split(sargs, " ")
-	cmd := exec.Command("ip", args...)
-	logger.Infof("exec command: ip %+v", sargs)
+	scmd := fmt.Sprintf("ip addr add dev %s local %s peer %s", iface.Name(), ip, peer)
+	cmd := exec.Command("bash", "-c", scmd)
+	logger.Infof("exec command: ip %+v", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -85,10 +82,9 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 
 	// des 10.1.1.0/24，gateway to 10.1.1.2
 	// ip route add 10.1.1.0/24 via 10.1.1.2 dev tun0
-	sargs = fmt.Sprintf("route add %s via %s dev %s", subnet, peer, iface.Name())
-	args = strings.Split(sargs, " ")
-	cmd = exec.Command("ip", args...)
-	logger.Infof("exec command: ip %+v", sargs)
+	scmd = fmt.Sprintf("ip route add %s via %s dev %s", subnet, peer, iface.Name())
+	cmd = exec.Command("bash", "-c", scmd)
+	logger.Infof("exec command: ip %+v", scmd)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -101,6 +97,7 @@ func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) 
 func GetNetGateway() (gw, dev string, err error) {
 
 	file, err := os.Open("/proc/net/route")
+	//file, err := os.Open("./test.txt")
 	if err != nil {
 		return "", "", err
 	}
@@ -121,8 +118,8 @@ func GetNetGateway() (gw, dev string, err error) {
 		line, isPrefix, err := rd.ReadLine()
 
 		if err != nil {
-			logger.Errorf("GetNetGateway err:%+v", err.Error())
-			if err.Error() == "EOF" {
+			logger.Error(err.Error())
+			if err == io.EOF {
 				return "", "", errors.New("No default gateway found")
 			}
 			return "", "", err
@@ -146,7 +143,6 @@ func GetNetGateway() (gw, dev string, err error) {
 		for scanner.Scan() {
 			tokens = append(tokens, scanner.Text())
 		}
-		logger.Infof("len=%+v,tokens=%+v", len(tokens), tokens)
 		iface := tokens[0]
 		dest := tokens[1]
 		gw := tokens[2]
@@ -184,11 +180,10 @@ func addRoute(dest, nextHop, iface string) {
 
 // delete route
 func delRoute(dest string) {
-	sargs := fmt.Sprintf("-4 route del %s", dest)
-	args := strings.Split(sargs, " ")
 	// todo unify command format
-	cmd := exec.Command("ip", args...)
-	logger.Infof("exec command: ip %s", sargs)
+	scmd := fmt.Sprintf("ip -4 route del %s", dest)
+	cmd := exec.Command("bash", "-c", scmd)
+	logger.Infof("exec command: %s", scmd)
 	err := cmd.Run()
 
 	if err != nil {
@@ -201,10 +196,9 @@ func redirectGateway(iface, gw string) error {
 	subnets := []string{"0.0.0.0/1", "128.0.0.0/1"}
 	logger.Info("Redirecting Gateway")
 	for _, subnet := range subnets {
-		sargs := fmt.Sprintf("-4 route add %s via %s dev %s", subnet, gw, iface)
-		args := strings.Split(sargs, " ")
-		cmd := exec.Command("ip", args...)
-		logger.Info("ip %s", sargs)
+		scmd := fmt.Sprintf("ip -4 route add %s via %s dev %s", subnet, gw, iface)
+		cmd := exec.Command("bash", "-c", scmd)
+		logger.Infof("exec command: ip %s", scmd)
 		err := cmd.Run()
 
 		if err != nil {
