@@ -43,21 +43,15 @@ type VpnServer struct {
 	// IP Pool
 	ippool *VpnIpPool
 	// client peers, key is the mac address, value is a HopPeer record
-
 	// Registered clients clientip-connection
 	clients map[string]*connection
-
 	// Register requests
 	register chan *connection
-
 	// Unregister requests
 	unregister chan *connection
-
-	outData *Data
-
-	inData chan *Data
-
-	toIface chan []byte
+	outData    *Data
+	inData     chan *Data
+	toIface    chan []byte
 }
 
 func NewServer(cfg ServerConfig) error {
@@ -93,6 +87,7 @@ func NewServer(cfg ServerConfig) error {
 	vpnServer.register = make(chan *connection)
 	vpnServer.unregister = make(chan *connection)
 	vpnServer.clients = make(map[string]*connection)
+	// no use
 	vpnServer.inData = make(chan *Data, 100)
 	vpnServer.toIface = make(chan []byte, 100)
 

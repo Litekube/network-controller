@@ -26,7 +26,7 @@ import (
 var Logger = logging.MustGetLogger("ws-vpn")
 
 func InitLogger(debug bool) {
-	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}]%{shortfunc}%{color:reset} %{message}"
+	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
 	format := logging.MustStringFormatter(fmt_string)
 	logging.SetFormatter(format)
 	logging.SetBackend(logging.NewLogBackend(os.Stdout, "", 0))

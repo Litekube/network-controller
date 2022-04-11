@@ -180,7 +180,6 @@ func addRoute(dest, nextHop, iface string) {
 
 // delete route
 func delRoute(dest string) {
-	// todo unify command format
 	scmd := fmt.Sprintf("ip -4 route del %s", dest)
 	cmd := exec.Command("bash", "-c", scmd)
 	logger.Infof("exec command: %s", scmd)
