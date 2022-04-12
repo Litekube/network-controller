@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetNetGateway(t *testing.T) {
-	// fix file path before test
+	// fix file path "./test.txt" before test
 	gateway, dev, err := GetNetGateway()
 	log.Printf(gateway)
 	log.Printf(dev)

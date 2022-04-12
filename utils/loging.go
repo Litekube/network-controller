@@ -23,21 +23,27 @@ import (
 	"github.com/op/go-logging"
 )
 
-var Logger = logging.MustGetLogger("ws-vpn")
+var Logger *logging.Logger
 
-func InitLogger(debug bool) {
+func GetLogger() *logging.Logger {
+	if Logger == nil {
+		InitLogger()
+	}
+	return Logger
+}
+
+func InitLogger() {
+	Logger = logging.MustGetLogger("ws-vpn")
 	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
 	format := logging.MustStringFormatter(fmt_string)
 	logging.SetFormatter(format)
 	logging.SetBackend(logging.NewLogBackend(os.Stdout, "", 0))
+}
 
+func SetLoggerLevel(debug bool) {
 	if debug {
 		logging.SetLevel(logging.DEBUG, "ws-vpn")
 	} else {
 		logging.SetLevel(logging.INFO, "ws-vpn")
 	}
-}
-
-func GetLogger() *logging.Logger {
-	return Logger
 }

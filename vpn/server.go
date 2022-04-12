@@ -19,23 +19,21 @@
 package vpn
 
 import (
-	"net"
-
 	"fmt"
 	"github.com/songgao/water"
+	"golang.org/x/net/ipv4"
+	"net"
+	"ws-vpn/config"
 	//. "github.com/zreigz/ws-vpn/vpn/utils"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	. "ws-vpn/vpn/utils"
-
-	"golang.org/x/net/ipv4"
 )
 
 type VpnServer struct {
 	// config
-	cfg ServerConfig
+	cfg config.ServerConfig
 	// interface
 	iface *water.Interface
 	// subnet
@@ -54,14 +52,20 @@ type VpnServer struct {
 	toIface    chan []byte
 }
 
-func NewServer(cfg ServerConfig) error {
+var vpnServer *VpnServer
+
+func GetVpnServer() *VpnServer {
+	return vpnServer
+}
+
+func NewServer(cfg config.ServerConfig) error {
 	var err error
 
 	if cfg.MTU != 0 {
 		MTU = cfg.MTU
 	}
 
-	vpnServer := &VpnServer{}
+	vpnServer = &VpnServer{}
 	vpnServer.cfg = cfg
 	vpnServer.ippool = &VpnIpPool{}
 

@@ -17,9 +17,11 @@
  */
 package vpn
 
-import loging "ws-vpn/vpn/utils"
+import (
+	"ws-vpn/utils"
+)
 
-var logger = loging.GetLogger()
+var logger = utils.GetLogger()
 
 var MTU = 1400
 
@@ -28,7 +30,17 @@ const (
 )
 
 const (
-	STATE_INIT      = 0
-	STATE_CONNECT   = 1
-	STATE_CONNECTED = 2
+	STATE_INIT      = 1
+	STATE_CONNECT   = 2
+	STATE_CONNECTED = 3
+)
+
+const (
+	STATUS_OK         = "200"
+	STATUS_BADREQUEST = "400"
+	STATUS_ERR        = "500"
+)
+
+const (
+	MESSAGE_OK = "ok"
 )

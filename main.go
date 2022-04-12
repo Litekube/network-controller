@@ -22,10 +22,11 @@ import (
 	"flag"
 	"os"
 	"runtime"
-
+	"ws-vpn/config"
+	"ws-vpn/grpc/grpc_server"
+	"ws-vpn/utils"
 	client "ws-vpn/vpn"
 	server "ws-vpn/vpn"
-	. "ws-vpn/vpn/utils"
 )
 
 var debug bool
@@ -36,8 +37,10 @@ func main() {
 	flag.StringVar(&cfgFile, "config", "", "configfile")
 	flag.Parse()
 
-	InitLogger(debug)
-	logger := GetLogger()
+	utils.InitLogger()
+	utils.SetLoggerLevel(debug)
+
+	logger := utils.GetLogger()
 
 	checkerr := func(err error) {
 		if err != nil {
@@ -52,7 +55,7 @@ func main() {
 
 	logger.Infof("using config file: %+v", cfgFile)
 
-	icfg, err := ParseConfig(cfgFile)
+	icfg, err := config.ParseConfig(cfgFile)
 	logger.Debug(icfg)
 	checkerr(err)
 
@@ -62,10 +65,11 @@ func main() {
 	}
 
 	switch cfg := icfg.(type) {
-	case ServerConfig:
+	case config.ServerConfig:
+		go grpc_server.StartGrpcServer(cfg.GrpcPort)
 		err := server.NewServer(cfg)
 		checkerr(err)
-	case ClientConfig:
+	case config.ClientConfig:
 		err := client.NewClient(cfg)
 		checkerr(err)
 	default:

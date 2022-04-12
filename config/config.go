@@ -15,11 +15,10 @@
  * Author: Lukasz Zajaczkowski <zreigz@gmail.com>
  *
  */
-package utils
+package config
 
 import (
 	"errors"
-
 	"github.com/scalingdata/gcfg"
 )
 
@@ -28,6 +27,7 @@ import (
 // Server Config
 type ServerConfig struct {
 	Port            int
+	GrpcPort        int
 	ListenAddr      string
 	VpnAddr         string
 	MTU             int
@@ -52,7 +52,7 @@ type VpnConfig struct {
 
 // return server/client config
 func ParseConfig(filename string) (interface{}, error) {
-	cfg := new(VpnConfig)
+	cfg := &VpnConfig{}
 	err := gcfg.ReadFileInto(cfg, filename)
 	if err != nil {
 		return nil, err

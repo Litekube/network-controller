@@ -18,18 +18,16 @@
 package vpn
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
 	"net"
-
 	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
-	. "ws-vpn/vpn/utils"
-
-	"encoding/json"
-	"github.com/gorilla/websocket"
+	"ws-vpn/config"
 
 	"time"
 
@@ -38,7 +36,7 @@ import (
 
 type Client struct {
 	// config
-	cfg ClientConfig
+	cfg config.ClientConfig
 	// interface
 	iface *water.Interface
 	// ip addr
@@ -53,7 +51,7 @@ type Client struct {
 
 var net_gateway, net_nic string
 
-func NewClient(cfg ClientConfig) error {
+func NewClient(cfg config.ClientConfig) error {
 	var err error
 
 	if cfg.MTU != 0 {
@@ -96,6 +94,7 @@ func NewClient(cfg ClientConfig) error {
 	// fix here, conenct immediately，then 2s
 	// ticker := time.NewTicker(3 * time.Second)
 	var connection *websocket.Conn
+	logger.Infof("client try to connect")
 	for ok := true; ok; ok = (connection == nil) {
 		connection, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 		if err != nil {

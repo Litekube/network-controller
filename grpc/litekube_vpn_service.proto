@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package pb;
+// option go_package = "path;name";
+// . 表示生成的go文件的存放地址./，会自动生成目录的。
+// pb_gen 表示生成的go文件所属的包名
+option go_package = "./pb_gen;pb_gen";
+
+//RPC接口
+service LiteKubeVpnService {
+  rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
+  rpc CheckConnState(CheckConnStateRequest) returns (CheckConnResponse){}
+  rpc UnRegister(UnRegisterRequest) returns (UnRegisterResponse){}
+}
+
+message HelloWorldRequest {
+  string hello_text = 1;
+}
+
+message HelloWorldResponse {
+  string thanks_text = 1;
+}
+
+message CheckConnStateRequest {
+  string token = 1;
+}
+
+message CheckConnResponse {
+  string code = 1;
+  string message = 2;
+  int32 connState = 3;
+}
+
+message UnRegisterRequest {
+  string token = 1;
+}
+
+message UnRegisterResponse {
+  string code = 1;
+  string message = 2;
+  bool result = 3;
+}
