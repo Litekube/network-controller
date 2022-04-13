@@ -8,10 +8,17 @@ import (
 
 type grpcServer struct {
 	*pb_gen.UnimplementedLiteKubeVpnServiceServer
+	port         int
+	unRegisterCh chan string
+	service      *internal.LiteVpnService
 }
 
-func newGrpcServer() *grpcServer {
-	return &grpcServer{}
+func newGrpcServer(port int, unRegisterCh chan string) *grpcServer {
+	return &grpcServer{
+		port:         port,
+		unRegisterCh: unRegisterCh,
+		service:      internal.NewLiteVpnService(unRegisterCh),
+	}
 }
 
 func (s *grpcServer) HelloWorld(ctx context.Context, req *pb_gen.HelloWorldRequest) (*pb_gen.HelloWorldResponse, error) {
@@ -22,10 +29,10 @@ func (s *grpcServer) HelloWorld(ctx context.Context, req *pb_gen.HelloWorldReque
 
 func (s *grpcServer) CheckConnState(ctx context.Context, req *pb_gen.CheckConnStateRequest) (*pb_gen.CheckConnResponse, error) {
 	logger.Infof("get CheckConnState request: %+v", req)
-	return internal.CheckConnState(ctx, req)
+	return s.service.CheckConnState(ctx, req)
 }
 
 func (s *grpcServer) UnRegister(ctx context.Context, req *pb_gen.UnRegisterRequest) (*pb_gen.UnRegisterResponse, error) {
 	logger.Infof("get CheckConnState request: %+v", req)
-	return internal.UnRegister(ctx, req)
+	return s.service.UnRegister(ctx, req)
 }

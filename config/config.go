@@ -39,6 +39,7 @@ type ClientConfig struct {
 	Server          string
 	Port            int
 	MTU             int
+	Token           string
 	RedirectGateway bool
 }
 

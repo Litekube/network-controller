@@ -13,13 +13,15 @@ import (
 
 var LiteVpnSocket = "unix://litevpn.sock"
 var logger = utils.GetLogger()
+var gServer *grpcServer
 
-func StartGrpcServer(port int) {
-	startGrpcServerTcp(port)
+func StartGrpcServer(port int, unRegisterCh chan string) {
+	gServer = newGrpcServer(port, unRegisterCh)
+	gServer.startGrpcServerTcp()
 }
 
-func startGrpcServerTcp(port int) error {
-	tcpAddr := fmt.Sprintf(":%d", port)
+func (s *grpcServer) startGrpcServerTcp() error {
+	tcpAddr := fmt.Sprintf(":%d", s.port)
 	lis, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
 		logger.Errorf("tcp failed to listen: %v", err)
@@ -29,7 +31,7 @@ func startGrpcServerTcp(port int) error {
 	// 注册 grpcurl 所需的 reflection 服务
 	reflection.Register(server)
 	// 注册业务服务
-	pb_gen.RegisterLiteKubeVpnServiceServer(server, newGrpcServer())
+	pb_gen.RegisterLiteKubeVpnServiceServer(server, s)
 	logger.Infof("grpc server ready to serve at %+v", tcpAddr)
 	if err := server.Serve(lis); err != nil {
 		logger.Errorf("grpc server failed to serve: %v", err)
@@ -38,7 +40,7 @@ func startGrpcServerTcp(port int) error {
 	return nil
 }
 
-func startGrpcServerUDS() error {
+func (s *grpcServer) startGrpcServerUDS() error {
 	os.Remove("/tmp/litevpn.sock")
 	server_addr, err := net.ResolveUnixAddr("unix", "/tmp/litevpn.sock")
 	if err != nil {
@@ -52,9 +54,9 @@ func startGrpcServerUDS() error {
 		return err
 	}
 
-	s := grpc.NewServer()
-	pb_gen.RegisterLiteKubeVpnServiceServer(s, newGrpcServer())
-	err = s.Serve(lis)
+	gs := grpc.NewServer()
+	pb_gen.RegisterLiteKubeVpnServiceServer(gs, s)
+	err = gs.Serve(lis)
 	if err != nil {
 		logger.Errorf("failed to listen: %v", err)
 		return err
@@ -63,11 +65,11 @@ func startGrpcServerUDS() error {
 }
 
 // createListener returns a listener bound to the requested protocol and address.
-func createListener(listener string) (ret net.Listener, rerr error) {
+func (s *grpcServer) createListener(listener string) (ret net.Listener, rerr error) {
 	if listener == "" {
 		listener = LiteVpnSocket
 	}
-	network, address := networkAndAddress(listener)
+	network, address := s.networkAndAddress(listener)
 
 	if network == "unix" {
 		if err := os.Remove(address); err != nil && !os.IsNotExist(err) {
@@ -87,7 +89,7 @@ func createListener(listener string) (ret net.Listener, rerr error) {
 
 // networkAndAddress crudely splits a URL string into network (scheme) and address,
 // where the address includes everything after the scheme/authority separator.
-func networkAndAddress(str string) (string, string) {
+func (s *grpcServer) networkAndAddress(str string) (string, string) {
 	parts := strings.SplitN(str, "://", 2)
 	if len(parts) > 1 {
 		return parts[0], parts[1]

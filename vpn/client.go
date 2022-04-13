@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -87,6 +88,8 @@ func NewClient(cfg config.ClientConfig) error {
 	// build ws connect to vpn server
 	srvAdr := fmt.Sprintf("%s:%d", cfg.Server, cfg.Port)
 	u := url.URL{Scheme: "ws", Host: srvAdr, Path: "/ws"}
+	header := http.Header{}
+	header.Set(NodeTokenKey, cfg.Token)
 	logger.Debugf("Connecting to %+v", u.String())
 
 	// continue to try to connect every 2s until success
@@ -94,9 +97,9 @@ func NewClient(cfg config.ClientConfig) error {
 	// fix here, conenct immediately，then 2s
 	// ticker := time.NewTicker(3 * time.Second)
 	var connection *websocket.Conn
-	logger.Infof("client try to connect")
+	logger.Infof("client try to connect %+v", u.String())
 	for ok := true; ok; ok = (connection == nil) {
-		connection, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+		connection, _, err = websocket.DefaultDialer.Dial(u.String(), header)
 		if err != nil {
 			logger.Infof("Dial: %+v", err)
 		}

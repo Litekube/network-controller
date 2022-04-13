@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"time"
+	"ws-vpn/sqlite"
 )
 
 const (
@@ -39,6 +40,8 @@ type connection struct {
 	data      chan *Data
 	state     int // STATE_INIT / STATE_CONNECTED
 	ipAddress *net.IPNet
+	token     string
+	bindIp    string
 }
 
 var upgrader = websocket.Upgrader{
@@ -48,7 +51,7 @@ var upgrader = websocket.Upgrader{
 
 var maxId int = 0
 
-func NewConnection(ws *websocket.Conn, server *VpnServer) *connection {
+func NewConnection(ws *websocket.Conn, server *VpnServer, token string) *connection {
 	if ws == nil {
 		panic("ws cannot be nil")
 	}
@@ -56,10 +59,24 @@ func NewConnection(ws *websocket.Conn, server *VpnServer) *connection {
 		panic("server cannot be nil")
 	}
 
+	vpnMgr := sqlite.VpnMgr{}
+	item, _ := vpnMgr.QueryByToken(token)
+	bindIp := ""
+	if item != nil && len(item.BindIp) != 0 {
+		bindIp = item.BindIp
+	}
 	// auto inc
 	maxId++
 	data := make(chan *Data)
-	c := &connection{maxId, ws, server, data, STATE_INIT, nil}
+	c := &connection{maxId, ws, server, data, STATE_INIT, nil, token, bindIp}
+
+	if len(bindIp) == 0 {
+		vpnMgr.Insert(sqlite.VpnMgr{
+			Token:  token,
+			State:  STATE_INIT,
+			BindIp: "",
+		})
+	}
 
 	go c.writePump()
 	go c.readPump()
@@ -177,11 +194,17 @@ func (c *connection) dispatcher(p []byte) {
 		if message.ConnectionState == STATE_CONNECT {
 			d := &Data{}
 			d.ConnectionState = STATE_CONNECT
-			cltIP, err := c.server.ippool.next()
+
+			cltIP, err := c.server.ippool.next(c.bindIp)
 			if err != nil {
 				c.cleanUp()
 				logger.Error(err)
 			}
+			if len(c.bindIp) == 0 {
+				vpnMgr := sqlite.VpnMgr{}
+				vpnMgr.UpdateIpByToken(cltIP.IP.String(), c.token)
+			}
+
 			logger.Infof("get next IP from ippool %+v", cltIP)
 			d.Payload = []byte(cltIP.String())
 

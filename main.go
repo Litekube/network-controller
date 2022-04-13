@@ -66,8 +66,9 @@ func main() {
 
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
-		go grpc_server.StartGrpcServer(cfg.GrpcPort)
-		err := server.NewServer(cfg)
+		unRegisterCh := make(chan string, 128)
+		go grpc_server.StartGrpcServer(cfg.GrpcPort, unRegisterCh)
+		err := server.NewServer(cfg, unRegisterCh)
 		checkerr(err)
 	case config.ClientConfig:
 		err := client.NewClient(cfg)

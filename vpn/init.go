@@ -25,11 +25,14 @@ var logger = utils.GetLogger()
 
 var MTU = 1400
 
+const NodeTokenKey = "node-token"
+
 const (
 	IFACE_BUFSIZE = 2048
 )
 
 const (
+	STATE_IDLE      = -1
 	STATE_INIT      = 1
 	STATE_CONNECT   = 2
 	STATE_CONNECTED = 3

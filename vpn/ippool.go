@@ -19,24 +19,49 @@ package vpn
 
 import (
 	"errors"
+	"fmt"
 	"net"
+	"strconv"
+	"strings"
 	"sync/atomic"
+	"ws-vpn/sqlite"
 )
 
 /*
 assign unique ip for client
-todo persist data to db
 */
 
 type VpnIpPool struct {
 	subnet *net.IPNet
-	pool   [127]int32 // map
+	pool   [127]int32 // map cache
 }
 
 var poolFull = errors.New("IP Pool Full")
 
-// get an empty ip
-func (p *VpnIpPool) next() (*net.IPNet, error) {
+// bind existed ip or get an empty ip
+func (p *VpnIpPool) next(bindIp string) (*net.IPNet, error) {
+
+	// assign ip+mask
+	ipnet := &net.IPNet{
+		make([]byte, 4),
+		make([]byte, 4),
+	}
+	copy([]byte(ipnet.IP), []byte(p.subnet.IP))
+	copy([]byte(ipnet.Mask), []byte(p.subnet.Mask))
+
+	if len(bindIp) != 0 {
+		ip3, err := strconv.Atoi(strings.Split(bindIp, ".")[3])
+		if atomic.LoadInt32(&p.pool[ip3]) == 0 {
+			// unnormal
+			return nil, errors.New("internal error: conflict between cache and db")
+		}
+		if err != nil {
+			return nil, errors.New(fmt.Sprint("bind existed ip err: %+v", err.Error()))
+		}
+		ipnet.IP[3] = byte(ip3)
+		return ipnet, nil
+	}
+
 	found := false
 	var i int
 	// server take x.1 & x.2, begin from 3
@@ -47,17 +72,27 @@ func (p *VpnIpPool) next() (*net.IPNet, error) {
 			break
 		}
 	}
+
+	// find db with LRU
+	if !found {
+		vpnMgr := sqlite.VpnMgr{}
+		item, _ := vpnMgr.QueryLogestIdle()
+		if item != nil {
+			// no need to set cache=0, just delete old item from sqlite
+			found = true
+			i, _ = strconv.Atoi(strings.Split(bindIp, ".")[3])
+			res, err := vpnMgr.DeleteById(item.Id)
+			if !res || err != nil {
+				logger.Errorf("fail to delete idle item: %+v", err)
+				return nil, errors.New(fmt.Sprint("fail to delete idle item: %+v", err.Error()))
+			}
+		}
+	}
+
 	if !found {
 		return nil, poolFull
 	}
 
-	// assign ip+mask
-	ipnet := &net.IPNet{
-		make([]byte, 4),
-		make([]byte, 4),
-	}
-	copy([]byte(ipnet.IP), []byte(p.subnet.IP))
-	copy([]byte(ipnet.Mask), []byte(p.subnet.Mask))
 	ipnet.IP[3] = byte(i) // found=true
 	return ipnet, nil
 }
@@ -76,4 +111,18 @@ func (p *VpnIpPool) release(ip net.IP) {
 	logger.Infof("releasing ip: %+v", ip)
 	i := ip[3]
 	p.pool[i] = 0
+}
+
+func (p *VpnIpPool) releaseByTag(tag int) {
+	defer func() {
+		// recover only work in defer part
+		// if normal, return nil
+		// if panic, return panic err and recover normal,continue to execute
+		if err := recover(); err != nil {
+			logger.Error(err)
+		}
+	}()
+
+	//logger.Infof("releasing ip: %+v", tag)
+	p.pool[tag] = 0
 }

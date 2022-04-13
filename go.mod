@@ -3,6 +3,7 @@ module ws-vpn
 go 1.17
 
 require (
+	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7

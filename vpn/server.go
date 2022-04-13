@@ -20,15 +20,19 @@ package vpn
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/songgao/water"
 	"golang.org/x/net/ipv4"
 	"net"
-	"ws-vpn/config"
-	//. "github.com/zreigz/ws-vpn/vpn/utils"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
+	"sync"
 	"syscall"
+	"ws-vpn/config"
+	"ws-vpn/sqlite"
 )
 
 type VpnServer struct {
@@ -46,10 +50,12 @@ type VpnServer struct {
 	// Register requests
 	register chan *connection
 	// Unregister requests
-	unregister chan *connection
-	outData    *Data
-	inData     chan *Data
-	toIface    chan []byte
+	unregister   chan *connection
+	outData      *Data
+	inData       chan *Data
+	toIface      chan []byte
+	wg           sync.WaitGroup
+	unRegisterCh chan string
 }
 
 var vpnServer *VpnServer
@@ -58,7 +64,7 @@ func GetVpnServer() *VpnServer {
 	return vpnServer
 }
 
-func NewServer(cfg config.ServerConfig) error {
+func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	var err error
 
 	if cfg.MTU != 0 {
@@ -68,6 +74,13 @@ func NewServer(cfg config.ServerConfig) error {
 	vpnServer = &VpnServer{}
 	vpnServer.cfg = cfg
 	vpnServer.ippool = &VpnIpPool{}
+	vpnServer.unRegisterCh = unRegisterCh
+
+	// sync cache with db
+	vpnServer.wg = sync.WaitGroup{}
+	vpnServer.wg.Add(1)
+	go vpnServer.syncBindIpWithDb()
+	go vpnServer.handleGrpcUnRegister()
 
 	iface, err := newTun("")
 	if err != nil {
@@ -98,16 +111,18 @@ func NewServer(cfg config.ServerConfig) error {
 	vpnServer.handleInterface()
 
 	// http handle for client to connect
-	http.HandleFunc("/ws", vpnServer.serveWs)
+	router := mux.NewRouter()
+	router.HandleFunc("/ws", vpnServer.serveWs)
 	addr := fmt.Sprintf(":%d", vpnServer.cfg.Port)
-	err = http.ListenAndServe(addr, nil)
+
+	// wait for cache&db sync
+	vpnServer.wg.Wait()
+	logger.Infof("server ready to ListenAndServe at %+v", addr)
+	err = http.ListenAndServe(addr, router)
 	if err != nil {
 		logger.Panicf("ListenAndServe: %+v" + err.Error())
 	}
-	logger.Infof("ListenAndServe: %+v", addr)
-
 	return nil
-
 }
 
 func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
@@ -115,13 +130,15 @@ func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
+	token := r.Header.Get(NodeTokenKey)
+	logger.Infof("reqeust from token: %+v", token)
 	// client http to ws
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
-	NewConnection(ws, server)
+	NewConnection(ws, server, token)
 }
 
 func (server *VpnServer) run() {
@@ -131,6 +148,8 @@ func (server *VpnServer) run() {
 			// add to clients
 			logger.Infof("Connection registered: %+v", c.ipAddress.IP.String())
 			server.clients[c.ipAddress.IP.String()] = c
+			vpnMgr := sqlite.VpnMgr{}
+			vpnMgr.UpdateStateByToken(STATE_CONNECTED, c.token)
 			break
 
 		case c := <-server.unregister:
@@ -143,7 +162,10 @@ func (server *VpnServer) run() {
 				delete(server.clients, clientIP)
 				close(c.data)
 				if c.ipAddress != nil {
-					server.ippool.release(c.ipAddress.IP)
+					// unregister for stable ip
+					// server.ippool.release(c.ipAddress.IP)
+					vpnMgr := sqlite.VpnMgr{}
+					vpnMgr.UpdateStateByToken(STATE_IDLE, c.token)
 				}
 				logger.Infof("unregister Connection: %+v, current active clients number: %+v", c.ipAddress.IP, len(server.clients))
 			}
@@ -227,4 +249,41 @@ func (server *VpnServer) cleanUp() {
 
 	// code zero indicates success
 	os.Exit(0)
+}
+
+func (server *VpnServer) syncBindIpWithDb() error {
+	defer server.wg.Done()
+	vpnMgr := sqlite.VpnMgr{}
+	ipList, err := vpnMgr.QueryAll()
+	if err != nil {
+		return err
+	}
+	logger.Debugf("ipList: %+v", ipList)
+	for _, ip := range ipList {
+		tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
+		// no Concurrency
+		vpnServer.ippool.pool[tag] = 1
+	}
+	return nil
+}
+
+func (server *VpnServer) handleGrpcUnRegister() error {
+	logger.Infof("start handle unregister ip channel")
+	for {
+		select {
+		case ip := <-server.unRegisterCh:
+			logger.Infof("receive ip: %+v", ip)
+			// close connection
+			c, ok := server.clients[ip]
+			// may close before unRegister grpc
+			if ok {
+				delete(server.clients, ip)
+				close(c.data)
+				c.ws.Close()
+			}
+			// release ip
+			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
+			server.ippool.releaseByTag(tag)
+		}
+	}
 }

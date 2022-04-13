@@ -29,6 +29,7 @@ message CheckConnResponse {
   string code = 1;
   string message = 2;
   int32 connState = 3;
+  string bind_ip = 4;
 }
 
 message UnRegisterRequest {
