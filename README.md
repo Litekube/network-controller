@@ -1,13 +1,13 @@
-# ws-vpn
-A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The ws-vpn is built on top of Linux's tun/tap device.
+# litekube-vpn
+A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The litekube-vpn is built on top of Linux's tun/tap device.
 
 ## Build and Install
 
-Building ws-vpn needs Go 1.1 or higher.
+Building litekube-vpn needs Go 1.1 or higher.
 
 ```shell
 go mod tidy
-go build -o ws-vpn main.go
+go build -o litekube-vpn main.go
 ```
 
 ## Configuration
@@ -17,13 +17,13 @@ There are two config files to distinguish between client and server.
 To start server execute the following command:
 
 ```shell
-ws-vpn --config server.ini
+litekube-vpn --config server.ini
 ```
 
 client:
 
 ```shell
-ws-vpn --config client.ini
+litekube-vpn --config client.ini
 ```
 
 ### Download
@@ -54,6 +54,6 @@ iptables -A FORWARD -i eth0 -o tun0 -j ACCEPT
 iptables -A FORWARD -i tun0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 ```
 
-## ws-vpn-explain
+## litekube-vpn-explain
 
-if you want to know more about this project, please look at [ws-vpn-explain](./ws-vpn-explain.md)
+if you want to know more about this project, please look at [litekube-vpn-explain](./litekube-vpn-explain.md)

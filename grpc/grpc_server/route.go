@@ -2,8 +2,8 @@ package grpc_server
 
 import (
 	"context"
-	"ws-vpn/grpc/pb_gen"
-	"ws-vpn/internal"
+	"litekube-vpn/grpc/pb_gen"
+	"litekube-vpn/internal"
 )
 
 type grpcServer struct {

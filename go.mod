@@ -1,4 +1,4 @@
-module ws-vpn
+module litekube-vpn
 
 go 1.17
 

@@ -18,7 +18,7 @@
 package vpn
 
 import (
-	"ws-vpn/utils"
+	"litekube-vpn/utils"
 )
 
 var logger = utils.GetLogger()

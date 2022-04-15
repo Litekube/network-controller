@@ -22,13 +22,13 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
+	"litekube-vpn/config"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
-	"ws-vpn/config"
 
 	"time"
 

@@ -1,4 +1,4 @@
-# ws-vpn-explain
+# litekube-vpn-explain
 
 ## C/S交互关系
 

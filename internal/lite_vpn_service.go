@@ -3,10 +3,10 @@ package internal
 import (
 	"context"
 	"errors"
-	"ws-vpn/grpc/pb_gen"
-	"ws-vpn/sqlite"
-	"ws-vpn/utils"
-	"ws-vpn/vpn"
+	"litekube-vpn/grpc/pb_gen"
+	"litekube-vpn/sqlite"
+	"litekube-vpn/utils"
+	"litekube-vpn/vpn"
 )
 
 type LiteVpnService struct {

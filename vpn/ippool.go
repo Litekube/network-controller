@@ -20,11 +20,11 @@ package vpn
 import (
 	"errors"
 	"fmt"
+	"litekube-vpn/sqlite"
 	"net"
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"ws-vpn/sqlite"
 )
 
 /*

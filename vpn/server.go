@@ -24,6 +24,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
 	"golang.org/x/net/ipv4"
+	"litekube-vpn/config"
+	"litekube-vpn/sqlite"
 	"net"
 	"net/http"
 	"os"
@@ -32,8 +34,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"ws-vpn/config"
-	"ws-vpn/sqlite"
 )
 
 type VpnServer struct {

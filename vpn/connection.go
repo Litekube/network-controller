@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"io"
+	"litekube-vpn/sqlite"
 	"net"
 	"time"
-	"ws-vpn/sqlite"
 )
 
 const (

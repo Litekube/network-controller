@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"litekube-vpn/grpc/pb_gen"
+	"litekube-vpn/utils"
 	"net"
 	"os"
 	"strings"
-	"ws-vpn/grpc/pb_gen"
-	"ws-vpn/utils"
 )
 
 var LiteVpnSocket = "unix://litevpn.sock"

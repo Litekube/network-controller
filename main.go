@@ -20,13 +20,13 @@ package main
 
 import (
 	"flag"
+	"litekube-vpn/config"
+	"litekube-vpn/grpc/grpc_server"
+	"litekube-vpn/utils"
+	client "litekube-vpn/vpn"
+	server "litekube-vpn/vpn"
 	"os"
 	"runtime"
-	"ws-vpn/config"
-	"ws-vpn/grpc/grpc_server"
-	"ws-vpn/utils"
-	client "ws-vpn/vpn"
-	server "ws-vpn/vpn"
 )
 
 var debug bool
