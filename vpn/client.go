@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Lukasz Zajaczkowski <zreigz@gmail.com>
+ * Author: wanna <wananzjx@163.com>
  *
  */
 package vpn
@@ -128,6 +128,7 @@ func NewClient(cfg config.ClientConfig) error {
 		ConnectionState: STATE_CONNECT,
 	}
 
+	// read
 	for {
 		messageType, r, err := connection.ReadMessage()
 		if err != nil {

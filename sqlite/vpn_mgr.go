@@ -25,6 +25,17 @@ func (vpn *VpnMgr) Insert(u VpnMgr) error {
 	return err
 }
 
+func (vpn *VpnMgr) InsertToken(token string) error {
+	db = GetDb()
+	sql := `insert into vpn_mgr (token) values()`
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(token)
+	return err
+}
+
 func (vpn *VpnMgr) QueryAll() (bindIps []string, e error) {
 	db = GetDb()
 	sql := `select bind_ip from vpn_mgr`

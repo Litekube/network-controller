@@ -89,3 +89,65 @@ func (service *LiteVpnService) UnRegister(ctx context.Context, req *pb_gen.UnReg
 	service.unRegisterCh <- item.BindIp
 	return wrappedResp(vpn.STATUS_OK, vpn.MESSAGE_OK, result)
 }
+
+func (service *LiteVpnService) GetRegistedIp(ctx context.Context, req *pb_gen.GetRegistedIpRequest) (*pb_gen.GetRegistedIpResponse, error) {
+
+	wrappedResp := func(code, message, ip string) (resp *pb_gen.GetRegistedIpResponse, err error) {
+		if code != vpn.STATUS_OK {
+			logger.Errorf("query token: %+v err: %+v", req.Token, err)
+			err = errors.New(message)
+		}
+		resp = &pb_gen.GetRegistedIpResponse{
+			Message: message,
+			Code:    code,
+			Ip:      ip,
+		}
+		logger.Debugf("resp: %+v", resp)
+		return
+	}
+
+	if len(req.Token) == 0 {
+		return wrappedResp(vpn.STATUS_BADREQUEST, "token can't be empty", "")
+	}
+
+	vpnMgr := sqlite.VpnMgr{}
+	item, err := vpnMgr.QueryByToken(req.Token)
+	if item == nil {
+		return wrappedResp(vpn.STATUS_OK, err.Error(), "")
+	} else if err != nil {
+		return wrappedResp(vpn.STATUS_ERR, err.Error(), "")
+	}
+
+	return wrappedResp(vpn.STATUS_OK, vpn.MESSAGE_OK, item.BindIp)
+}
+
+func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetTokenRequest) (*pb_gen.GetTokenResponse, error) {
+
+	wrappedResp := func(code, message, token string) (resp *pb_gen.GetTokenResponse, err error) {
+		if code != vpn.STATUS_OK {
+			err = errors.New(message)
+		}
+		resp = &pb_gen.GetTokenResponse{
+			Message: message,
+			Code:    code,
+			Token:   token,
+		}
+		logger.Debugf("resp: %+v", resp)
+		return
+	}
+
+	token := utils.GetUniqueToken()
+	vpnMgr := sqlite.VpnMgr{}
+	// no need
+	//item, err := vpnMgr.QueryByToken(token)
+	err := vpnMgr.Insert(sqlite.VpnMgr{
+		Token:  token,
+		State:  vpn.STATE_IDLE,
+		BindIp: "",
+	})
+	if err != nil {
+		return wrappedResp(vpn.STATUS_ERR, err.Error(), "")
+	}
+
+	return wrappedResp(vpn.STATUS_OK, vpn.MESSAGE_OK, token)
+}

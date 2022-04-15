@@ -9,8 +9,10 @@ option go_package = "./pb_gen;pb_gen";
 //RPC接口
 service LiteKubeVpnService {
   rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
   rpc CheckConnState(CheckConnStateRequest) returns (CheckConnResponse){}
   rpc UnRegister(UnRegisterRequest) returns (UnRegisterResponse){}
+  rpc GetRegistedIp(GetRegistedIpRequest) returns (GetRegistedIpResponse){}
 }
 
 message HelloWorldRequest {
@@ -19,6 +21,14 @@ message HelloWorldRequest {
 
 message HelloWorldResponse {
   string thanks_text = 1;
+}
+
+message GetTokenRequest {}
+
+message GetTokenResponse {
+  string code = 1;
+  string message = 2;
+  string token = 3;
 }
 
 message CheckConnStateRequest {
@@ -40,4 +50,14 @@ message UnRegisterResponse {
   string code = 1;
   string message = 2;
   bool result = 3;
+}
+
+message GetRegistedIpRequest {
+  string token = 1;
+}
+
+message GetRegistedIpResponse {
+  string code = 1;
+  string message = 2;
+  string ip = 3;
 }

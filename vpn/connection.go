@@ -12,13 +12,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Lukasz Zajaczkowski <zreigz@gmail.com>
+ * Author: wanna <wananzjx@163.com>
  *
  */
 package vpn
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"io"
 	"net"
@@ -51,7 +53,7 @@ var upgrader = websocket.Upgrader{
 
 var maxId int = 0
 
-func NewConnection(ws *websocket.Conn, server *VpnServer, token string) *connection {
+func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connection, error) {
 	if ws == nil {
 		panic("ws cannot be nil")
 	}
@@ -62,6 +64,9 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) *connect
 	vpnMgr := sqlite.VpnMgr{}
 	item, _ := vpnMgr.QueryByToken(token)
 	bindIp := ""
+	if item == nil {
+		return nil, errors.New(fmt.Sprintf("invalid token %+v", token))
+	}
 	if item != nil && len(item.BindIp) != 0 {
 		bindIp = item.BindIp
 	}
@@ -70,19 +75,21 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) *connect
 	data := make(chan *Data)
 	c := &connection{maxId, ws, server, data, STATE_INIT, nil, token, bindIp}
 
+	// fix server gen token, no need insert now
 	if len(bindIp) == 0 {
-		vpnMgr.Insert(sqlite.VpnMgr{
-			Token:  token,
-			State:  STATE_INIT,
-			BindIp: "",
-		})
+		//vpnMgr.Insert(sqlite.VpnMgr{
+		//	Token:  token,
+		//	State:  STATE_INIT,
+		//	BindIp: "",
+		//})
+		vpnMgr.UpdateStateByToken(STATE_INIT, token)
 	}
 
 	go c.writePump()
 	go c.readPump()
 	logger.Debug("New connection created")
 
-	return c
+	return c, nil
 }
 
 func (c *connection) readPump() {

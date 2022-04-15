@@ -23,8 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LiteKubeVpnServiceClient interface {
 	HelloWorld(ctx context.Context, in *HelloWorldRequest, opts ...grpc.CallOption) (*HelloWorldResponse, error)
+	GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error)
 	CheckConnState(ctx context.Context, in *CheckConnStateRequest, opts ...grpc.CallOption) (*CheckConnResponse, error)
 	UnRegister(ctx context.Context, in *UnRegisterRequest, opts ...grpc.CallOption) (*UnRegisterResponse, error)
+	GetRegistedIp(ctx context.Context, in *GetRegistedIpRequest, opts ...grpc.CallOption) (*GetRegistedIpResponse, error)
 }
 
 type liteKubeVpnServiceClient struct {
@@ -38,6 +40,15 @@ func NewLiteKubeVpnServiceClient(cc grpc.ClientConnInterface) LiteKubeVpnService
 func (c *liteKubeVpnServiceClient) HelloWorld(ctx context.Context, in *HelloWorldRequest, opts ...grpc.CallOption) (*HelloWorldResponse, error) {
 	out := new(HelloWorldResponse)
 	err := c.cc.Invoke(ctx, "/pb.LiteKubeVpnService/HelloWorld", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *liteKubeVpnServiceClient) GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error) {
+	out := new(GetTokenResponse)
+	err := c.cc.Invoke(ctx, "/pb.LiteKubeVpnService/GetToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +73,24 @@ func (c *liteKubeVpnServiceClient) UnRegister(ctx context.Context, in *UnRegiste
 	return out, nil
 }
 
+func (c *liteKubeVpnServiceClient) GetRegistedIp(ctx context.Context, in *GetRegistedIpRequest, opts ...grpc.CallOption) (*GetRegistedIpResponse, error) {
+	out := new(GetRegistedIpResponse)
+	err := c.cc.Invoke(ctx, "/pb.LiteKubeVpnService/GetRegistedIp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LiteKubeVpnServiceServer is the server API for LiteKubeVpnService service.
 // All implementations must embed UnimplementedLiteKubeVpnServiceServer
 // for forward compatibility
 type LiteKubeVpnServiceServer interface {
 	HelloWorld(context.Context, *HelloWorldRequest) (*HelloWorldResponse, error)
+	GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error)
 	CheckConnState(context.Context, *CheckConnStateRequest) (*CheckConnResponse, error)
 	UnRegister(context.Context, *UnRegisterRequest) (*UnRegisterResponse, error)
+	GetRegistedIp(context.Context, *GetRegistedIpRequest) (*GetRegistedIpResponse, error)
 	mustEmbedUnimplementedLiteKubeVpnServiceServer()
 }
 
@@ -79,11 +101,17 @@ type UnimplementedLiteKubeVpnServiceServer struct {
 func (UnimplementedLiteKubeVpnServiceServer) HelloWorld(context.Context, *HelloWorldRequest) (*HelloWorldResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HelloWorld not implemented")
 }
+func (UnimplementedLiteKubeVpnServiceServer) GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetToken not implemented")
+}
 func (UnimplementedLiteKubeVpnServiceServer) CheckConnState(context.Context, *CheckConnStateRequest) (*CheckConnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckConnState not implemented")
 }
 func (UnimplementedLiteKubeVpnServiceServer) UnRegister(context.Context, *UnRegisterRequest) (*UnRegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnRegister not implemented")
+}
+func (UnimplementedLiteKubeVpnServiceServer) GetRegistedIp(context.Context, *GetRegistedIpRequest) (*GetRegistedIpResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegistedIp not implemented")
 }
 func (UnimplementedLiteKubeVpnServiceServer) mustEmbedUnimplementedLiteKubeVpnServiceServer() {}
 
@@ -112,6 +140,24 @@ func _LiteKubeVpnService_HelloWorld_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LiteKubeVpnServiceServer).HelloWorld(ctx, req.(*HelloWorldRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LiteKubeVpnService_GetToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LiteKubeVpnServiceServer).GetToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.LiteKubeVpnService/GetToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LiteKubeVpnServiceServer).GetToken(ctx, req.(*GetTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -152,6 +198,24 @@ func _LiteKubeVpnService_UnRegister_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LiteKubeVpnService_GetRegistedIp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRegistedIpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LiteKubeVpnServiceServer).GetRegistedIp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.LiteKubeVpnService/GetRegistedIp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LiteKubeVpnServiceServer).GetRegistedIp(ctx, req.(*GetRegistedIpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LiteKubeVpnService_ServiceDesc is the grpc.ServiceDesc for LiteKubeVpnService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -164,12 +228,20 @@ var LiteKubeVpnService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _LiteKubeVpnService_HelloWorld_Handler,
 		},
 		{
+			MethodName: "GetToken",
+			Handler:    _LiteKubeVpnService_GetToken_Handler,
+		},
+		{
 			MethodName: "CheckConnState",
 			Handler:    _LiteKubeVpnService_CheckConnState_Handler,
 		},
 		{
 			MethodName: "UnRegister",
 			Handler:    _LiteKubeVpnService_UnRegister_Handler,
+		},
+		{
+			MethodName: "GetRegistedIp",
+			Handler:    _LiteKubeVpnService_GetRegistedIp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

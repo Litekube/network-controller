@@ -33,6 +33,16 @@ func (s *grpcServer) CheckConnState(ctx context.Context, req *pb_gen.CheckConnSt
 }
 
 func (s *grpcServer) UnRegister(ctx context.Context, req *pb_gen.UnRegisterRequest) (*pb_gen.UnRegisterResponse, error) {
-	logger.Infof("get CheckConnState request: %+v", req)
+	logger.Infof("get UnRegister request: %+v", req)
 	return s.service.UnRegister(ctx, req)
+}
+
+func (s *grpcServer) GetRegistedIp(ctx context.Context, req *pb_gen.GetRegistedIpRequest) (*pb_gen.GetRegistedIpResponse, error) {
+	logger.Infof("get Register request: %+v", req)
+	return s.service.GetRegistedIp(ctx, req)
+}
+
+func (s *grpcServer) GetToken(ctx context.Context, req *pb_gen.GetTokenRequest) (*pb_gen.GetTokenResponse, error) {
+	logger.Infof("get Register request: %+v", req)
+	return s.service.GetToken(ctx, req)
 }

@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Lukasz Zajaczkowski <zreigz@gmail.com>
+ * Author: wanna <wananzjx@163.com>
  *
  */
 
@@ -21,6 +21,7 @@ package vpn
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
 	"golang.org/x/net/ipv4"
 	"net"
@@ -138,7 +139,12 @@ func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
 		logger.Error(err)
 		return
 	}
-	NewConnection(ws, server, token)
+	// invalid token, close ws conn
+	_, err = NewConnection(ws, server, token)
+	if err != nil {
+		logger.Warning(err)
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, err.Error()))
+	}
 }
 
 func (server *VpnServer) run() {
@@ -260,9 +266,12 @@ func (server *VpnServer) syncBindIpWithDb() error {
 	}
 	logger.Debugf("ipList: %+v", ipList)
 	for _, ip := range ipList {
-		tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
-		// no Concurrency
-		vpnServer.ippool.pool[tag] = 1
+		// register token only, not connect yet
+		if len(ip) != 0 {
+			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
+			// no Concurrency
+			vpnServer.ippool.pool[tag] = 1
+		}
 	}
 	return nil
 }

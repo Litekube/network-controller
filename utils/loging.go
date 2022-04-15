@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Lukasz Zajaczkowski <zreigz@gmail.com>
+ * Author: wanna <wananzjx@163.com>
  *
  */
 package utils
@@ -23,17 +23,17 @@ import (
 	"github.com/op/go-logging"
 )
 
-var Logger *logging.Logger
+var logger *logging.Logger
 
 func GetLogger() *logging.Logger {
-	if Logger == nil {
+	if logger == nil {
 		InitLogger()
 	}
-	return Logger
+	return logger
 }
 
 func InitLogger() {
-	Logger = logging.MustGetLogger("ws-vpn")
+	logger = logging.MustGetLogger("ws-vpn")
 	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
 	format := logging.MustStringFormatter(fmt_string)
 	logging.SetFormatter(format)
