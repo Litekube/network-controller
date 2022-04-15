@@ -8,7 +8,6 @@ import (
 	"litekube-vpn/utils"
 	"net"
 	"os"
-	"strings"
 )
 
 var LiteVpnSocket = "unix://litevpn.sock"
@@ -62,37 +61,4 @@ func (s *grpcServer) startGrpcServerUDS() error {
 		return err
 	}
 	return nil
-}
-
-// createListener returns a listener bound to the requested protocol and address.
-func (s *grpcServer) createListener(listener string) (ret net.Listener, rerr error) {
-	if listener == "" {
-		listener = LiteVpnSocket
-	}
-	network, address := s.networkAndAddress(listener)
-
-	if network == "unix" {
-		if err := os.Remove(address); err != nil && !os.IsNotExist(err) {
-			logger.Warningf("failed to remove socket %s: %v", address, err)
-		}
-		defer func() {
-			if err := os.Chmod(address, 0600); err != nil {
-				rerr = err
-			}
-		}()
-	} else {
-		network = "tcp"
-	}
-
-	return net.Listen(network, address)
-}
-
-// networkAndAddress crudely splits a URL string into network (scheme) and address,
-// where the address includes everything after the scheme/authority separator.
-func (s *grpcServer) networkAndAddress(str string) (string, string) {
-	parts := strings.SplitN(str, "://", 2)
-	if len(parts) > 1 {
-		return parts[0], parts[1]
-	}
-	return "", parts[0]
 }
