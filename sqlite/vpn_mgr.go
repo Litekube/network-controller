@@ -214,3 +214,23 @@ func (vpn *VpnMgr) DeleteByToken(token string) (bool, error) {
 	}
 	return true, nil
 }
+
+func (vpn *VpnMgr) DeleteUnRegisteredIdle(expire int) (bool, error) {
+	db = GetDb()
+	// valid in sqlite
+	sql := `delete from vpn_mgr where state=-1 and bind_ip="" and julianday('now','localtime')*1440 -julianday(create_time)*1440>? and token!="reserverd"`
+
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return false, err
+	}
+	res, err := stmt.Exec(expire)
+	if err != nil {
+		return false, err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

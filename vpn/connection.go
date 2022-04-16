@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/wanna959/litekube-vpn/sqlite"
 	"io"
-	"litekube-vpn/sqlite"
 	"net"
 	"time"
 )

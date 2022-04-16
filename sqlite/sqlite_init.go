@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"litekube-vpn/utils"
+	"github.com/wanna959/litekube-vpn/utils"
 )
 
 const (
@@ -41,7 +41,7 @@ func createTable() error {
 		"id" integer primary key autoincrement,
 		"token" text not null unique,
 		"state" integer not null,
-		"bind_ip" text unique,
+		"bind_ip" text not null default "",
 		"create_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
     	"update_time"    timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime'))
 	)`

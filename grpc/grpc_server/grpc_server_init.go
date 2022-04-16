@@ -2,10 +2,10 @@ package grpc_server
 
 import (
 	"fmt"
+	"github.com/wanna959/litekube-vpn/grpc/pb_gen"
+	"github.com/wanna959/litekube-vpn/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"litekube-vpn/grpc/pb_gen"
-	"litekube-vpn/utils"
 	"net"
 	"os"
 )

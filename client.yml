@@ -1,0 +1,9 @@
+mode: client
+client:
+  serverAddr: 101.43.253.110
+  # server port
+  port: 6441
+  # MTU
+  mtu: 1400
+  token: b52f93d3f0ec4be7
+  redirectGateway: false

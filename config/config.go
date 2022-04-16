@@ -19,46 +19,52 @@ package config
 
 import (
 	"errors"
-	"github.com/scalingdata/gcfg"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
 )
 
-// server.ini / client.ini
+// server.yml / client.yml
 
 // Server Config
 type ServerConfig struct {
-	Port            int
-	GrpcPort        int
-	ListenAddr      string
-	VpnAddr         string
-	MTU             int
-	Interconnection bool
+	Port            int    `yaml:"port"`
+	GrpcPort        int    `yaml:"grpcPort"`
+	ListenAddr      string `yaml:"listenAddr"`
+	VpnAddr         string `yaml:"vpnAddr"`
+	MTU             int    `yaml:"mtu"`
+	Interconnection bool   `yaml:"interconnection"`
 }
 
 // Client Config
 type ClientConfig struct {
-	Server          string
-	Port            int
-	MTU             int
-	Token           string
-	RedirectGateway bool
+	ServerAddr      string `yaml:"serverAddr"`
+	Port            int    `yaml:"port"`
+	MTU             int    `yaml:"mut"`
+	Token           string `yaml:"token"`
+	RedirectGateway bool   `yaml:"redirectGateway"`
 }
 
 type VpnConfig struct {
-	Default struct {
-		Mode string
-	}
-	Server ServerConfig
-	Client ClientConfig
+	Mode   string       `yaml:"mode"`
+	Server ServerConfig `yaml:"server"`
+	Client ClientConfig `yaml:"client"`
 }
 
 // return server/client config
 func ParseConfig(filename string) (interface{}, error) {
 	cfg := &VpnConfig{}
-	err := gcfg.ReadFileInto(cfg, filename)
+
+	File, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Printf("fail to read file: %v", err)
+	}
+	err = yaml.Unmarshal(File, &cfg)
 	if err != nil {
 		return nil, err
 	}
-	switch cfg.Default.Mode {
+
+	switch cfg.Mode {
 	case "server":
 		return cfg.Server, nil
 	case "client":

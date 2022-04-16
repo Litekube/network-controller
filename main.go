@@ -20,11 +20,11 @@ package main
 
 import (
 	"flag"
-	"litekube-vpn/config"
-	"litekube-vpn/grpc/grpc_server"
-	"litekube-vpn/utils"
-	client "litekube-vpn/vpn"
-	server "litekube-vpn/vpn"
+	"github.com/wanna959/litekube-vpn/config"
+	"github.com/wanna959/litekube-vpn/grpc/grpc_server"
+	"github.com/wanna959/litekube-vpn/utils"
+	client "github.com/wanna959/litekube-vpn/vpn"
+	server "github.com/wanna959/litekube-vpn/vpn"
 	"os"
 	"runtime"
 )
@@ -66,7 +66,7 @@ func main() {
 
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
-		unRegisterCh := make(chan string, 128)
+		unRegisterCh := make(chan string, 8)
 		go grpc_server.StartGrpcServer(cfg.GrpcPort, unRegisterCh)
 		err := server.NewServer(cfg, unRegisterCh)
 		checkerr(err)

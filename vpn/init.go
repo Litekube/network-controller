@@ -18,7 +18,8 @@
 package vpn
 
 import (
-	"litekube-vpn/utils"
+	"github.com/wanna959/litekube-vpn/utils"
+	"time"
 )
 
 var logger = utils.GetLogger()
@@ -29,6 +30,11 @@ const NodeTokenKey = "node-token"
 
 const (
 	IFACE_BUFSIZE = 2048
+)
+
+const (
+	IdleTokenCheckDuration  = 1 * time.Minute
+	IdleTokenExpireDuration = 10 // minute
 )
 
 const (

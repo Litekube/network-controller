@@ -1,0 +1,11 @@
+mode: server
+server:
+  # port to listen
+  port: 6441
+  # grpc server port
+  grpcPort: 6440
+  # server addr
+  vpnAddr: 10.1.1.1/24
+  mtu: 1400
+  # allow communication between clients
+  interconnection: true

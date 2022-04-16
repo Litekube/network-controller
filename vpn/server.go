@@ -23,9 +23,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
+	"github.com/wanna959/litekube-vpn/config"
+	"github.com/wanna959/litekube-vpn/sqlite"
 	"golang.org/x/net/ipv4"
-	"litekube-vpn/config"
-	"litekube-vpn/sqlite"
 	"net"
 	"net/http"
 	"os"
@@ -34,6 +34,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type VpnServer struct {
@@ -51,12 +52,13 @@ type VpnServer struct {
 	// Register requests
 	register chan *connection
 	// Unregister requests
-	unregister   chan *connection
-	outData      *Data
-	inData       chan *Data
-	toIface      chan []byte
-	wg           sync.WaitGroup
-	unRegisterCh chan string
+	unregister     chan *connection
+	outData        *Data
+	inData         chan *Data
+	toIface        chan []byte
+	wg             sync.WaitGroup
+	unRegisterCh   chan string
+	idleCheckTimer *time.Ticker
 }
 
 var vpnServer *VpnServer
@@ -76,11 +78,12 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	vpnServer.cfg = cfg
 	vpnServer.ippool = &VpnIpPool{}
 	vpnServer.unRegisterCh = unRegisterCh
+	vpnServer.idleCheckTimer = time.NewTicker(IdleTokenCheckDuration)
 
 	// sync cache with db
 	vpnServer.wg = sync.WaitGroup{}
 	vpnServer.wg.Add(1)
-	go vpnServer.syncBindIpWithDb()
+	go vpnServer.initSyncBindIpWithDb()
 	go vpnServer.handleGrpcUnRegister()
 
 	iface, err := newTun("")
@@ -252,12 +255,13 @@ func (server *VpnServer) cleanUp() {
 		client.ws.Close()
 		delete(server.clients, key)
 	}
+	close(server.unregister)
 
 	// code zero indicates success
 	os.Exit(0)
 }
 
-func (server *VpnServer) syncBindIpWithDb() error {
+func (server *VpnServer) initSyncBindIpWithDb() error {
 	defer server.wg.Done()
 	vpnMgr := sqlite.VpnMgr{}
 	ipList, err := vpnMgr.QueryAll()
@@ -273,6 +277,12 @@ func (server *VpnServer) syncBindIpWithDb() error {
 			vpnServer.ippool.pool[tag] = 1
 		}
 	}
+	// ignore exsit err, guarantee for reserverd
+	vpnMgr.Insert(sqlite.VpnMgr{
+		Token:  "reserverd",
+		State:  -1,
+		BindIp: "",
+	})
 	return nil
 }
 
@@ -293,6 +303,9 @@ func (server *VpnServer) handleGrpcUnRegister() error {
 			// release ip
 			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
 			server.ippool.releaseByTag(tag)
+		case <-server.idleCheckTimer.C:
+			vpnMgr := sqlite.VpnMgr{}
+			vpnMgr.DeleteUnRegisteredIdle(IdleTokenExpireDuration)
 		}
 	}
 }

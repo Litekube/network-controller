@@ -17,13 +17,13 @@ There are two config files to distinguish between client and server.
 To start server execute the following command:
 
 ```shell
-litekube-vpn --config server.ini
+litekube-vpn --config server.yml
 ```
 
 client:
 
 ```shell
-litekube-vpn --config client.ini
+litekube-vpn --config client.yml
 ```
 
 ### Download

@@ -22,7 +22,7 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
-	"litekube-vpn/config"
+	"github.com/wanna959/litekube-vpn/config"
 	"net"
 	"net/http"
 	"net/url"
@@ -81,12 +81,12 @@ func NewClient(cfg config.ClientConfig) error {
 		return err
 	}
 
-	srvDest := cfg.Server + "/32"
+	srvDest := cfg.ServerAddr + "/32"
 	addRoute(srvDest, net_gateway, net_nic)
 	client.routes = append(client.routes, srvDest)
 
 	// build ws connect to vpn server
-	srvAdr := fmt.Sprintf("%s:%d", cfg.Server, cfg.Port)
+	srvAdr := fmt.Sprintf("%s:%d", cfg.ServerAddr, cfg.Port)
 	u := url.URL{Scheme: "ws", Host: srvAdr, Path: "/ws"}
 	header := http.Header{}
 	header.Set(NodeTokenKey, cfg.Token)

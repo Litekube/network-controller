@@ -1,4 +1,4 @@
-module litekube-vpn
+module github.com/wanna959/litekube-vpn
 
 go 1.17
 
