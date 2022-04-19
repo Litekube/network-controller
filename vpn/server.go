@@ -23,13 +23,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
-	"github.com/wanna959/litekube-vpn/config"
-	"github.com/wanna959/litekube-vpn/sqlite"
 	"golang.org/x/net/ipv4"
+	"litekube-vpn/config"
+	"litekube-vpn/contant"
+	"litekube-vpn/sqlite"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -59,6 +61,7 @@ type VpnServer struct {
 	wg             sync.WaitGroup
 	unRegisterCh   chan string
 	idleCheckTimer *time.Ticker
+	vpnTLSConfig   config.TLSConfig
 }
 
 var vpnServer *VpnServer
@@ -78,7 +81,13 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	vpnServer.cfg = cfg
 	vpnServer.ippool = &VpnIpPool{}
 	vpnServer.unRegisterCh = unRegisterCh
-	vpnServer.idleCheckTimer = time.NewTicker(IdleTokenCheckDuration)
+	vpnServer.idleCheckTimer = time.NewTicker(contant.IdleTokenCheckDuration)
+	vpnServer.vpnTLSConfig = config.TLSConfig{
+		CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
+		CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
+		ServerCertFile: filepath.Join(cfg.VpnCertDir, contant.ServerCertFile),
+		ServerKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ServerKeyFile),
+	}
 
 	// sync cache with db
 	vpnServer.wg = sync.WaitGroup{}
@@ -102,7 +111,6 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	vpnServer.ippool.subnet = subnet
 
 	go vpnServer.cleanUp()
-
 	go vpnServer.run()
 
 	vpnServer.register = make(chan *connection)
@@ -122,9 +130,10 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	// wait for cache&db sync
 	vpnServer.wg.Wait()
 	logger.Infof("server ready to ListenAndServe at %+v", addr)
-	err = http.ListenAndServe(addr, router)
+	//err = http.ListenAndServe(addr, router)
+	err = http.ListenAndServeTLS(addr, vpnServer.vpnTLSConfig.ServerCertFile, vpnServer.vpnTLSConfig.ServerKeyFile, router)
 	if err != nil {
-		logger.Panicf("ListenAndServe: %+v" + err.Error())
+		logger.Panicf("ListenAndServe: %+v", err.Error())
 	}
 	return nil
 }
@@ -134,7 +143,7 @@ func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	token := r.Header.Get(NodeTokenKey)
+	token := r.Header.Get(contant.NodeTokenKey)
 	logger.Infof("reqeust from token: %+v", token)
 	// client http to ws
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -158,7 +167,7 @@ func (server *VpnServer) run() {
 			logger.Infof("Connection registered: %+v", c.ipAddress.IP.String())
 			server.clients[c.ipAddress.IP.String()] = c
 			vpnMgr := sqlite.VpnMgr{}
-			vpnMgr.UpdateStateByToken(STATE_CONNECTED, c.token)
+			vpnMgr.UpdateStateByToken(contant.STATE_CONNECTED, c.token)
 			break
 
 		case c := <-server.unregister:
@@ -174,7 +183,7 @@ func (server *VpnServer) run() {
 					// unregister for stable ip
 					// server.ippool.release(c.ipAddress.IP)
 					vpnMgr := sqlite.VpnMgr{}
-					vpnMgr.UpdateStateByToken(STATE_IDLE, c.token)
+					vpnMgr.UpdateStateByToken(contant.STATE_IDLE, c.token)
 				}
 				logger.Infof("unregister Connection: %+v, current active clients number: %+v", c.ipAddress.IP, len(server.clients))
 			}
@@ -200,7 +209,7 @@ func (server *VpnServer) handleInterface() {
 
 	// interface to network packet
 	go func() {
-		packet := make([]byte, IFACE_BUFSIZE)
+		packet := make([]byte, contant.IFACE_BUFSIZE)
 		for {
 			plen, err := server.iface.Read(packet)
 			if err != nil {
@@ -222,7 +231,7 @@ func (server *VpnServer) handleInterface() {
 
 				logger.Debugf("Sending to client: %+v", client.ipAddress)
 				client.data <- &Data{
-					ConnectionState: STATE_CONNECTED,
+					ConnectionState: contant.STATE_CONNECTED,
 					Payload:         packet[:plen],
 				}
 
@@ -305,7 +314,7 @@ func (server *VpnServer) handleGrpcUnRegister() error {
 			server.ippool.releaseByTag(tag)
 		case <-server.idleCheckTimer.C:
 			vpnMgr := sqlite.VpnMgr{}
-			vpnMgr.DeleteUnRegisteredIdle(IdleTokenExpireDuration)
+			vpnMgr.DeleteUnRegisteredIdle(contant.IdleTokenExpireDuration)
 		}
 	}
 }

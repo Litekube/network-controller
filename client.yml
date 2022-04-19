@@ -1,5 +1,6 @@
 mode: client
 client:
+  vpnCertDir: /root/go_project/litekube-vpn/certs/vpn/
   serverAddr: 101.43.253.110
   # server port
   port: 6441

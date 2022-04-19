@@ -17,6 +17,11 @@
  */
 package vpn
 
+import "litekube-vpn/utils"
+
+var logger = utils.GetLogger()
+var MTU = 1400
+
 type Data struct {
 	ConnectionState int    `json:"connectionState"`
 	Payload         []byte `json:"payload"`

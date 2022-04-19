@@ -22,8 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/wanna959/litekube-vpn/sqlite"
 	"io"
+	"litekube-vpn/contant"
+	"litekube-vpn/sqlite"
 	"net"
 	"time"
 )
@@ -73,7 +74,7 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connec
 	// auto inc
 	maxId++
 	data := make(chan *Data)
-	c := &connection{maxId, ws, server, data, STATE_INIT, nil, token, bindIp}
+	c := &connection{maxId, ws, server, data, contant.STATE_INIT, nil, token, bindIp}
 
 	// fix server gen token, no need insert now
 	if len(bindIp) == 0 {
@@ -82,7 +83,7 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connec
 		//	State:  STATE_INIT,
 		//	BindIp: "",
 		//})
-		vpnMgr.UpdateStateByToken(STATE_INIT, token)
+		vpnMgr.UpdateStateByToken(contant.STATE_INIT, token)
 	}
 
 	go c.writePump()
@@ -166,7 +167,7 @@ func (c *connection) write(mt int, message *Data) error {
 
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 
-	if message.ConnectionState == STATE_CONNECTED {
+	if message.ConnectionState == contant.STATE_CONNECTED {
 		// write payload
 		err := c.ws.WriteMessage(mt, message.Payload)
 		if err != nil {
@@ -191,16 +192,16 @@ func (c *connection) write(mt int, message *Data) error {
 func (c *connection) dispatcher(p []byte) {
 	logger.Debug("Dispatcher connection %+v state: ", c.ipAddress, c.state)
 	switch c.state {
-	case STATE_INIT:
+	case contant.STATE_INIT:
 		logger.Debug("STATE_INIT")
 		var message Data
 		if err := json.Unmarshal(p, &message); err != nil {
 			logger.Panic(err)
 		}
 		// receive client connect message
-		if message.ConnectionState == STATE_CONNECT {
+		if message.ConnectionState == contant.STATE_CONNECT {
 			d := &Data{}
-			d.ConnectionState = STATE_CONNECT
+			d.ConnectionState = contant.STATE_CONNECT
 
 			cltIP, err := c.server.ippool.next(c.bindIp)
 			if err != nil {
@@ -217,12 +218,12 @@ func (c *connection) dispatcher(p []byte) {
 
 			// change connection parameter
 			c.ipAddress = cltIP
-			c.state = STATE_CONNECTED
+			c.state = contant.STATE_CONNECTED
 			// after connected, register
 			c.server.register <- c
 			c.data <- d
 		}
-	case STATE_CONNECTED:
+	case contant.STATE_CONNECTED:
 		// if connected, write to channel(tun0)
 		logger.Debug("STATE_CONNECTED")
 		c.server.toIface <- p

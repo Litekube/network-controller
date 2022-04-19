@@ -15,18 +15,14 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package contant
 
 import (
-	"github.com/wanna959/litekube-vpn/utils"
 	"time"
 )
 
-var logger = utils.GetLogger()
-
-var MTU = 1400
-
 const NodeTokenKey = "node-token"
+const NetTokenKey = "node-token"
 
 const (
 	IFACE_BUFSIZE = 2048
@@ -35,6 +31,15 @@ const (
 const (
 	IdleTokenCheckDuration  = 1 * time.Minute
 	IdleTokenExpireDuration = 10 // minute
+)
+
+const (
+	CAFile         = "ca.pem"
+	CAKeyFile      = "ca-key.pem"
+	ServerCertFile = "server.pem"
+	ServerKeyFile  = "server-key.pem"
+	ClientCertFile = "client.pem"
+	ClientKeyFile  = "client-key.pem"
 )
 
 const (

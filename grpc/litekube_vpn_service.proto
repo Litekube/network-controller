@@ -27,6 +27,12 @@ message GetTokenResponse {
   string code = 1;
   string message = 2;
   string token = 3;
+  string GrpcCaCert=4;
+  string GrpcClientKey=5;
+  string GrpcClientCert=6;
+  string VpnCaCert=7;
+  string VpnClientKey=8;
+  string VpnClientCert=9;
 }
 
 message CheckConnStateRequest {

@@ -28,8 +28,11 @@ import (
 
 // Server Config
 type ServerConfig struct {
-	Port            int    `yaml:"port"`
-	GrpcPort        int    `yaml:"grpcPort"`
+	Port        int    `yaml:"port"`
+	VpnCertDir  string `yaml:"vpnCertDir"`
+	GrpcPort    int    `yaml:"grpcPort"`
+	GrpcCertDir string `yaml:"grpcCertDir"`
+
 	ListenAddr      string `yaml:"listenAddr"`
 	VpnAddr         string `yaml:"vpnAddr"`
 	MTU             int    `yaml:"mtu"`
@@ -38,6 +41,7 @@ type ServerConfig struct {
 
 // Client Config
 type ClientConfig struct {
+	VpnCertDir      string `yaml:"vpnCertDir"`
 	ServerAddr      string `yaml:"serverAddr"`
 	Port            int    `yaml:"port"`
 	MTU             int    `yaml:"mut"`

@@ -18,16 +18,20 @@
 package vpn
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
-	"github.com/wanna959/litekube-vpn/config"
+	"litekube-vpn/certs"
+	"litekube-vpn/config"
+	"litekube-vpn/contant"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"time"
@@ -47,7 +51,8 @@ type Client struct {
 	data    chan *Data
 	state   int
 	// store route des ip
-	routes []string
+	routes          []string
+	ClientTLSConfig config.TLSConfig
 }
 
 var net_gateway, net_nic string
@@ -65,6 +70,12 @@ func NewClient(cfg config.ClientConfig) error {
 	client.toIface = make(chan []byte, 100)
 	client.data = make(chan *Data, 100)
 	client.routes = make([]string, 0, 1024)
+	client.ClientTLSConfig = config.TLSConfig{
+		CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
+		CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
+		ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
+		ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+	}
 
 	go client.cleanUp()
 
@@ -87,19 +98,38 @@ func NewClient(cfg config.ClientConfig) error {
 
 	// build ws connect to vpn server
 	srvAdr := fmt.Sprintf("%s:%d", cfg.ServerAddr, cfg.Port)
-	u := url.URL{Scheme: "ws", Host: srvAdr, Path: "/ws"}
+	u := url.URL{Scheme: "wss", Host: srvAdr, Path: "/ws"}
 	header := http.Header{}
-	header.Set(NodeTokenKey, cfg.Token)
+	header.Set(contant.NodeTokenKey, cfg.Token)
 	logger.Debugf("Connecting to %+v", u.String())
 
 	// continue to try to connect every 2s until success
-	// todo multiple vpnserver auto select
 	// fix here, conenct immediately，then 2s
 	// ticker := time.NewTicker(3 * time.Second)
 	var connection *websocket.Conn
 	logger.Infof("client try to connect %+v", u.String())
+
+	// load ca & client key/cert
+	pool, err := certs.LoadCertPool(client.ClientTLSConfig.CAFile)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	tlsCert, err := tls.LoadX509KeyPair(client.ClientTLSConfig.ClientCertFile, client.ClientTLSConfig.ClientKeyFile)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 	for ok := true; ok; ok = (connection == nil) {
-		connection, _, err = websocket.DefaultDialer.Dial(u.String(), header)
+		// support tls
+		dialer := websocket.Dialer{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      pool,
+				Certificates: []tls.Certificate{tlsCert},
+			},
+		}
+		connection, _, err = dialer.Dial(u.String(), header)
+		//connection, _, err = websocket.DefaultDialer.Dial(u.String(), header)
 		if err != nil {
 			logger.Infof("Dial: %+v", err)
 		}
@@ -109,7 +139,7 @@ func NewClient(cfg config.ClientConfig) error {
 	defer connection.Close()
 
 	// init state
-	client.state = STATE_INIT
+	client.state = contant.STATE_INIT
 
 	client.ws.SetReadLimit(maxMessageSize)
 	client.ws.SetReadDeadline(time.Now().Add(pongWait))
@@ -125,7 +155,7 @@ func NewClient(cfg config.ClientConfig) error {
 
 	// Initialize connection with master
 	client.data <- &Data{
-		ConnectionState: STATE_CONNECT,
+		ConnectionState: contant.STATE_CONNECT,
 	}
 
 	// read
@@ -151,7 +181,7 @@ func NewClient(cfg config.ClientConfig) error {
 func (client *Client) dispatcher(p []byte) {
 	logger.Debugf("Dispatcher client state: %+v", client.state)
 	switch client.state {
-	case STATE_INIT:
+	case contant.STATE_INIT:
 		logger.Debug("STATE_INIT")
 		var message Data
 		if err := json.Unmarshal(p, &message); err != nil {
@@ -159,7 +189,7 @@ func (client *Client) dispatcher(p []byte) {
 			close(client.data)
 			logger.Panic(err)
 		}
-		if message.ConnectionState == STATE_CONNECT {
+		if message.ConnectionState == contant.STATE_CONNECT {
 
 			ipStr := string(message.Payload)
 			ip, subnet, _ := net.ParseCIDR(ipStr)
@@ -171,10 +201,10 @@ func (client *Client) dispatcher(p []byte) {
 				}
 			}
 
-			client.state = STATE_CONNECTED
+			client.state = contant.STATE_CONNECTED
 			client.handleInterface()
 		}
-	case STATE_CONNECTED:
+	case contant.STATE_CONNECTED:
 		// write data to local interface channel
 		client.toIface <- p
 	}
@@ -196,7 +226,7 @@ func (client *Client) handleInterface() {
 
 	// interface to network packet
 	go func() {
-		packet := make([]byte, IFACE_BUFSIZE)
+		packet := make([]byte, contant.IFACE_BUFSIZE)
 		for {
 			plen, err := client.iface.Read(packet)
 			if err != nil {
@@ -204,7 +234,7 @@ func (client *Client) handleInterface() {
 				break
 			}
 			client.data <- &Data{
-				ConnectionState: STATE_CONNECTED,
+				ConnectionState: contant.STATE_CONNECTED,
 				Payload:         packet[:plen],
 			}
 		}
@@ -241,7 +271,7 @@ func (client *Client) writePump() {
 
 func (client *Client) write(mt int, message *Data) error {
 
-	if message.ConnectionState == STATE_CONNECTED {
+	if message.ConnectionState == contant.STATE_CONNECTED {
 		return client.ws.WriteMessage(mt, message.Payload)
 	} else {
 		s, err := json.Marshal(message)

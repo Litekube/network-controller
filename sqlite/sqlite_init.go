@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/wanna959/litekube-vpn/utils"
+	"litekube-vpn/utils"
 )
 
 const (

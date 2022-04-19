@@ -2,8 +2,10 @@ mode: server
 server:
   # port to listen
   port: 6441
+  vpnCertDir: /root/go_project/litekube-vpn/certs/vpn/
   # grpc server port
   grpcPort: 6440
+  grpcCertDir: /root/go_project/litekube-vpn/certs/hand/
   # server addr
   vpnAddr: 10.1.1.1/24
   mtu: 1400

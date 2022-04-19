@@ -20,11 +20,11 @@ package main
 
 import (
 	"flag"
-	"github.com/wanna959/litekube-vpn/config"
-	"github.com/wanna959/litekube-vpn/grpc/grpc_server"
-	"github.com/wanna959/litekube-vpn/utils"
-	client "github.com/wanna959/litekube-vpn/vpn"
-	server "github.com/wanna959/litekube-vpn/vpn"
+	"litekube-vpn/config"
+	"litekube-vpn/grpc/grpc_server"
+	"litekube-vpn/utils"
+	client "litekube-vpn/vpn"
+	server "litekube-vpn/vpn"
 	"os"
 	"runtime"
 )
@@ -34,7 +34,7 @@ var cfgFile string
 
 func main() {
 	flag.BoolVar(&debug, "debug", false, "Provide debug info")
-	flag.StringVar(&cfgFile, "config", "", "configfile")
+	flag.StringVar(&cfgFile, "config", "", "config file")
 	flag.Parse()
 
 	utils.InitLogger()
@@ -67,7 +67,7 @@ func main() {
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
 		unRegisterCh := make(chan string, 8)
-		go grpc_server.StartGrpcServer(cfg.GrpcPort, unRegisterCh)
+		go grpc_server.StartGrpcServer(cfg, unRegisterCh)
 		err := server.NewServer(cfg, unRegisterCh)
 		checkerr(err)
 	case config.ClientConfig:
