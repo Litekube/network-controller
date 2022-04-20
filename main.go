@@ -25,7 +25,6 @@ import (
 	client "litekube-vpn/vpn"
 	server "litekube-vpn/vpn"
 	"os"
-	"runtime"
 )
 
 var debug bool
@@ -58,10 +57,10 @@ func main() {
 	logger.Debug(icfg)
 	checkerr(err)
 
-	maxProcs := runtime.GOMAXPROCS(0)
-	if maxProcs < 2 {
-		runtime.GOMAXPROCS(2)
-	}
+	//maxProcs := runtime.GOMAXPROCS(0)
+	//if maxProcs < 2 {
+	//	runtime.GOMAXPROCS(2)
+	//}
 
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
