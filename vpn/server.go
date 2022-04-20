@@ -24,9 +24,12 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
 	"golang.org/x/net/ipv4"
+	"litekube-vpn/certs"
 	"litekube-vpn/config"
 	"litekube-vpn/contant"
+	"litekube-vpn/grpc/grpc_server"
 	"litekube-vpn/sqlite"
+	"litekube-vpn/utils"
 	"net"
 	"net/http"
 	"os"
@@ -54,9 +57,9 @@ type VpnServer struct {
 	// Register requests
 	register chan *connection
 	// Unregister requests
-	unregister     chan *connection
-	outData        *Data
-	inData         chan *Data
+	unregister chan *connection
+	//outData        *Data
+	//inData         chan *Data
 	toIface        chan []byte
 	wg             sync.WaitGroup
 	unRegisterCh   chan string
@@ -66,29 +69,51 @@ type VpnServer struct {
 
 var vpnServer *VpnServer
 
-func GetVpnServer() *VpnServer {
-	return vpnServer
-}
+//func GetVpnServer() *VpnServer {
+//	return vpnServer
+//}
 
-func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
-	var err error
+func NewServer(cfg config.ServerConfig) *VpnServer {
 
 	if cfg.MTU != 0 {
 		MTU = cfg.MTU
 	}
 
-	vpnServer = &VpnServer{}
-	vpnServer.cfg = cfg
-	vpnServer.ippool = &VpnIpPool{}
-	vpnServer.unRegisterCh = unRegisterCh
-	vpnServer.idleCheckTimer = time.NewTicker(contant.IdleTokenCheckDuration)
-	vpnServer.vpnTLSConfig = config.TLSConfig{
-		CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
-		CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
-		ServerCertFile: filepath.Join(cfg.VpnCertDir, contant.ServerCertFile),
-		ServerKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ServerKeyFile),
+	vpnServer = &VpnServer{
+		cfg:            cfg,
+		iface:          nil,
+		ipnet:          nil,
+		ippool:         &VpnIpPool{},
+		clients:        make(map[string]*connection),
+		register:       make(chan *connection),
+		unregister:     make(chan *connection),
+		toIface:        make(chan []byte, 100),
+		wg:             sync.WaitGroup{},
+		unRegisterCh:   nil,
+		idleCheckTimer: time.NewTicker(contant.IdleTokenCheckDuration),
+		vpnTLSConfig: config.TLSConfig{
+			CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
+			CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
+			ServerCertFile: filepath.Join(cfg.VpnCertDir, contant.ServerCertFile),
+			ServerKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ServerKeyFile),
+			ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
+			ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+		},
 	}
+	return vpnServer
+}
 
+func (server *VpnServer) Run() error {
+
+	unRegisterCh := make(chan string, 8)
+	vpnServer.unRegisterCh = unRegisterCh
+	go grpc_server.StartGrpcServer(server.cfg, unRegisterCh)
+
+	utils.CreateDir(server.cfg.VpnCertDir)
+	err := certs.CheckVpnCertConfig(vpnServer.vpnTLSConfig)
+	if err != nil {
+		return err
+	}
 	// sync cache with db
 	vpnServer.wg = sync.WaitGroup{}
 	vpnServer.wg.Add(1)
@@ -102,7 +127,7 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 	vpnServer.iface = iface
 
 	// vpnaddr = 10.1.1.1/24
-	ip, subnet, err := net.ParseCIDR(cfg.VpnAddr)
+	ip, subnet, err := net.ParseCIDR(server.cfg.VpnAddr)
 	err = setTunIP(iface, ip, subnet)
 	if err != nil {
 		return err
@@ -112,13 +137,6 @@ func NewServer(cfg config.ServerConfig, unRegisterCh chan string) error {
 
 	go vpnServer.cleanUp()
 	go vpnServer.run()
-
-	vpnServer.register = make(chan *connection)
-	vpnServer.unregister = make(chan *connection)
-	vpnServer.clients = make(map[string]*connection)
-	// no use
-	vpnServer.inData = make(chan *Data, 100)
-	vpnServer.toIface = make(chan []byte, 100)
 
 	vpnServer.handleInterface()
 

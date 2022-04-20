@@ -22,7 +22,7 @@ import (
 )
 
 const NodeTokenKey = "node-token"
-const NetTokenKey = "node-token"
+const NetTokenKey = "net-token"
 
 const (
 	IFACE_BUFSIZE = 2048

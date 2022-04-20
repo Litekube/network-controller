@@ -1,6 +1,8 @@
 package utils
 
-import "os"
+import (
+	"os"
+)
 
 // only all files exist return true, other return false
 func Exists(files ...string) bool {
@@ -19,4 +21,10 @@ func NotExists(files ...string) bool {
 		}
 	}
 	return true
+}
+
+func CreateDir(path string) {
+	if !Exists(path) {
+		os.MkdirAll(path, os.ModePerm)
+	}
 }

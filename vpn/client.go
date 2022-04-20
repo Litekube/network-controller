@@ -57,25 +57,32 @@ type Client struct {
 
 var net_gateway, net_nic string
 
-func NewClient(cfg config.ClientConfig) error {
-	var err error
+func NewClient(cfg config.ClientConfig) *Client {
 
 	if cfg.MTU != 0 {
 		MTU = cfg.MTU
 	}
 
-	client := &Client{}
-	client.cfg = cfg
-
-	client.toIface = make(chan []byte, 100)
-	client.data = make(chan *Data, 100)
-	client.routes = make([]string, 0, 1024)
-	client.ClientTLSConfig = config.TLSConfig{
-		CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
-		CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
-		ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
-		ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+	client := &Client{
+		cfg:     cfg,
+		iface:   nil,
+		ip:      nil,
+		toIface: make(chan []byte, 100),
+		ws:      nil,
+		data:    make(chan *Data, 100),
+		state:   0,
+		routes:  make([]string, 0, 1024),
+		ClientTLSConfig: config.TLSConfig{
+			CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
+			CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
+			ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
+			ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+		},
 	}
+	return client
+}
+
+func (client *Client) Run() error {
 
 	go client.cleanUp()
 
@@ -92,15 +99,15 @@ func NewClient(cfg config.ClientConfig) error {
 		return err
 	}
 
-	srvDest := cfg.ServerAddr + "/32"
+	srvDest := client.cfg.ServerAddr + "/32"
 	addRoute(srvDest, net_gateway, net_nic)
 	client.routes = append(client.routes, srvDest)
 
 	// build ws connect to vpn server
-	srvAdr := fmt.Sprintf("%s:%d", cfg.ServerAddr, cfg.Port)
+	srvAdr := fmt.Sprintf("%s:%d", client.cfg.ServerAddr, client.cfg.Port)
 	u := url.URL{Scheme: "wss", Host: srvAdr, Path: "/ws"}
 	header := http.Header{}
-	header.Set(contant.NodeTokenKey, cfg.Token)
+	header.Set(contant.NodeTokenKey, client.cfg.Token)
 	logger.Debugf("Connecting to %+v", u.String())
 
 	// continue to try to connect every 2s until success

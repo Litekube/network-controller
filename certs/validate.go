@@ -3,9 +3,10 @@ package certs
 import (
 	"crypto/tls"
 	"crypto/x509"
-	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
 	"litekube-vpn/utils"
+
+	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
 // check if certificate and key are one pair

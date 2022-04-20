@@ -1,10 +1,14 @@
 mode: client
 client:
-  vpnCertDir: /root/go_project/litekube-vpn/certs/vpn/
+  # vpn tls cert root dir
+  vpnCertDir: /root/go_project/litekube-vpn/certs/test2/
+  # vpn server ip
   serverAddr: 101.43.253.110
-  # server port
+  # vpn server port
   port: 6441
   # MTU
   mtu: 1400
-  token: b52f93d3f0ec4be7
+  # node token
+  token: c9168a88d15b4a18
+  # if redict gateway
   redirectGateway: false

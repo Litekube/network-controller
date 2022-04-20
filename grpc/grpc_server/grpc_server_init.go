@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	"io/ioutil"
+	"litekube-vpn/certs"
 	"litekube-vpn/config"
 	"litekube-vpn/contant"
 	"litekube-vpn/grpc/pb_gen"
@@ -59,9 +60,15 @@ func newGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 
 func StartGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) {
 	gServer = newGrpcServer(cfg, unRegisterCh)
-	// todo self check-generate
-	// gServer.CheckCertConfig()
-	gServer.startGrpcServerTcp()
+	utils.CreateDir(cfg.GrpcCertDir)
+	err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
+	if err != nil {
+		logger.Error(err)
+	}
+	err = gServer.startGrpcServerTcp()
+	if err != nil {
+		logger.Error(err)
+	}
 }
 
 func (s *GrpcServer) startGrpcServerTcp() error {

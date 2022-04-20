@@ -21,7 +21,6 @@ package main
 import (
 	"flag"
 	"litekube-vpn/config"
-	"litekube-vpn/grpc/grpc_server"
 	"litekube-vpn/utils"
 	client "litekube-vpn/vpn"
 	server "litekube-vpn/vpn"
@@ -66,12 +65,12 @@ func main() {
 
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
-		unRegisterCh := make(chan string, 8)
-		go grpc_server.StartGrpcServer(cfg, unRegisterCh)
-		err := server.NewServer(cfg, unRegisterCh)
+		vpnServer := server.NewServer(cfg)
+		err = vpnServer.Run()
 		checkerr(err)
 	case config.ClientConfig:
-		err := client.NewClient(cfg)
+		client := client.NewClient(cfg)
+		err := client.Run()
 		checkerr(err)
 	default:
 		logger.Error("Invalid config file")

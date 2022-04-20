@@ -1,13 +1,16 @@
 mode: server
 server:
-  # port to listen
+  # vpn server port to listen
   port: 6441
-  vpnCertDir: /root/go_project/litekube-vpn/certs/vpn/
+  # vpn tls cert root dir
+  vpnCertDir: /root/go_project/litekube-vpn/certs/test2/
   # grpc server port
   grpcPort: 6440
-  grpcCertDir: /root/go_project/litekube-vpn/certs/hand/
+  # grpc tls cert root dir
+  grpcCertDir: /root/go_project/litekube-vpn/certs/test1/
   # server addr
   vpnAddr: 10.1.1.1/24
+  # MTU
   mtu: 1400
   # allow communication between clients
   interconnection: true

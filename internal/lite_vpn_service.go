@@ -163,7 +163,7 @@ func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetToke
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
 
-	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, "grpc-client", []string{"litekube-vpn-grpc"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, "litekube-vpn-grpc-client", []string{"litekube-vpn-grpc"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
@@ -179,7 +179,7 @@ func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetToke
 	resp.GrpcClientKey = base64.StdEncoding.EncodeToString(keyBytes)
 	resp.GrpcClientCert = base64.StdEncoding.EncodeToString(certBytes)
 
-	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "vpn-client", []string{"litekube-vpn"}, service.vpnTlsConfig.CAFile, service.vpnTlsConfig.CAKeyFile, service.vpnTlsConfig.ClientCertFile, service.vpnTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "litekube-vpn-client", []string{"litekube-vpn"}, service.vpnTlsConfig.CAFile, service.vpnTlsConfig.CAKeyFile, service.vpnTlsConfig.ClientCertFile, service.vpnTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}

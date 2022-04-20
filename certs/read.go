@@ -2,31 +2,22 @@ package certs
 
 import (
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
-	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
+
+	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
 func LoadCertificate(certPath string) (*x509.Certificate, error) {
-	bytes, err := ioutil.ReadFile(certPath)
-	if err != nil {
+	certificates, err := LoadCertificates(certPath)
+	if err != nil || certificates == nil || len(certificates) < 1 {
 		return nil, err
+	} else {
+		return certificates[0], err
 	}
-
-	block, _ := pem.Decode(bytes)
-	if block == nil {
-		return nil, fmt.Errorf("fail to decode pem cert")
-	}
-
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return cert, nil
 }
 
+// if client/server certificate generate by this package, return[0] is client/server certificate, return[1] is CA certificate
 func LoadCertificates(certPath string) ([]*x509.Certificate, error) {
 	certBytes, err := ioutil.ReadFile(certPath)
 	if err != nil {

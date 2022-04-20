@@ -71,7 +71,7 @@ func GenerateClientCertKey(regen bool, commonName string, organization []string,
 	//	return keyBytes, certutil.EncodeCertPEM(cert), false, nil
 	//}
 	// always re-generate for new client
-	return GenerateCertKey(regen, commonName, organization, nil, []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, caCertPath, caKeyPath, certPath, keyPath)
+	return GenerateCertKey(true, commonName, organization, nil, []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, caCertPath, caKeyPath, certPath, keyPath)
 }
 
 // set regen=true to force gen new cert
@@ -84,9 +84,11 @@ func GenerateCertKey(regen bool, commonName string, organization []string, altNa
 	pool := x509.NewCertPool()
 	pool.AppendCertsFromPEM(caBytes)
 
+	var flag bool
 	// check for certificate expiration
 	if !regen {
 		regen = Expired(certPath, pool, 10)
+		flag = regen
 	}
 
 	if !regen {
@@ -137,5 +139,12 @@ func GenerateCertKey(regen bool, commonName string, organization []string, altNa
 	if err != nil {
 		return []byte{}, []byte{}, false, err
 	}
+
+	// for local admin use
+	if !utils.Exists(certPath, keyPath) || flag {
+		fmt.Println("1111")
+		certutil.WriteCert(certPath, certutil.EncodeCertPEM(cert))
+	}
+
 	return keyBytes, certutil.EncodeCertPEM(cert), true, nil
 }

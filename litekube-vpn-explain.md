@@ -1,6 +1,6 @@
 # litekube-vpn-explain
 
-## C/S交互关系
+## vpn C/S交互关系
 
 ### C/S通信
 
@@ -100,12 +100,3 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 # 添加101.43.253.110  gateway         255.255.255.255 UGH   0      0        0 ens160
 ip -4 r a 101.43.253.110/32 via 192.168.107.2 dev ens160
 ```
-
-### Connection.go
-
-- connect state
-  - server/client connection state：init or connected
-  - message state
-    - connect：client发给server初次建立连接请求
-    - connected：已成功建立连接
-
