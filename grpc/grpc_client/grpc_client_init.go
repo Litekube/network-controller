@@ -14,7 +14,7 @@ import (
 )
 
 type GrpcClient struct {
-	c           pb_gen.LiteKubeVpnServiceClient
+	C           pb_gen.LiteKubeVpnServiceClient
 	Ip          string
 	Port        string
 	GrpcCertDir string
@@ -66,7 +66,7 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 		return err
 	}
 	// init grpc client
-	c.c = pb_gen.NewLiteKubeVpnServiceClient(conn)
+	c.C = pb_gen.NewLiteKubeVpnServiceClient(conn)
 
 	return nil
 }

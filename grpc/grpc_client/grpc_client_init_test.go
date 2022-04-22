@@ -25,7 +25,7 @@ func TestGetGrpcClient(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	resp, err := client.c.HelloWorld(ctx, req)
+	resp, err := client.C.HelloWorld(ctx, req)
 	logger.Info(resp)
 	logger.Info(err)
 }
@@ -45,7 +45,7 @@ func TestGrpcClient_InitGrpcClientConn(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	resp, err := client.c.GetToken(ctx, req)
+	resp, err := client.C.GetToken(ctx, req)
 	logger.Info(resp)
 	logger.Info(err)
 
@@ -73,7 +73,7 @@ func TestGrpcClient_InitGrpcClientConn2(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	resp, err := client.c.HelloWorld(ctx, req)
+	resp, err := client.C.HelloWorld(ctx, req)
 	logger.Info(resp)
 	logger.Info(err)
 }
