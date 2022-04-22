@@ -17,7 +17,7 @@ type GrpcClient struct {
 	c           pb_gen.LiteKubeVpnServiceClient
 	Ip          string
 	Port        string
-	grpcCertDir string
+	GrpcCertDir string
 	CAFile      string
 	CertFile    string
 	KeyFile     string
@@ -35,14 +35,14 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 	address = fmt.Sprintf("%s:%s", c.Ip, c.Port)
 
 	var dialOpt []grpc.DialOption
-	cert, err := tls.LoadX509KeyPair(filepath.Join(c.grpcCertDir, c.CertFile), filepath.Join(c.grpcCertDir, c.KeyFile))
+	cert, err := tls.LoadX509KeyPair(filepath.Join(c.GrpcCertDir, c.CertFile), filepath.Join(c.GrpcCertDir, c.KeyFile))
 	if err != nil {
 		logger.Errorf("tls.LoadX509KeyPair err: %v", err)
 		return err
 	}
 
 	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile(filepath.Join(c.grpcCertDir, c.CAFile))
+	ca, err := ioutil.ReadFile(filepath.Join(c.GrpcCertDir, c.CAFile))
 	if err != nil {
 		logger.Errorf("ioutil.ReadFile err: %v", err)
 		return err

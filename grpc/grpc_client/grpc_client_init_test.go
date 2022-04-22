@@ -14,7 +14,7 @@ func TestGetGrpcClient(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		grpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/",
 		CAFile:      "ca2.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
@@ -34,7 +34,7 @@ func TestGrpcClient_InitGrpcClientConn(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		grpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
@@ -62,7 +62,7 @@ func TestGrpcClient_InitGrpcClientConn2(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		grpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
