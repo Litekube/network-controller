@@ -20,7 +20,7 @@ package vpn
 import (
 	"errors"
 	"fmt"
-	"litekube-vpn/sqlite"
+	"github.com/Litekube/litekube-vpn/sqlite"
 	"net"
 	"strconv"
 	"strings"

@@ -17,7 +17,7 @@
  */
 package vpn
 
-import "litekube-vpn/utils"
+import "github.com/Litekube/litekube-vpn/utils"
 
 var logger = utils.GetLogger()
 var MTU = 1400

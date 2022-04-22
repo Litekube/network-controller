@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"database/sql"
+	"github.com/Litekube/litekube-vpn/utils"
 	_ "github.com/mattn/go-sqlite3"
-	"litekube-vpn/utils"
 )
 
 const (

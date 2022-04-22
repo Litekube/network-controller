@@ -5,11 +5,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
+	"github.com/Litekube/litekube-vpn/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
-	"litekube-vpn/grpc/pb_gen"
-	"litekube-vpn/utils"
 	"path/filepath"
 )
 

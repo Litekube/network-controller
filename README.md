@@ -32,7 +32,7 @@ Todo：release
 
 ### Network forwarding
 On the server the IP forwarding is needed. First we need to be sure that IP forwarding is enabled.
-Very often this is disabled by default. This is done by running the following command line as root:
+Very often this is disabled by default. This is done by running the following command line as root：
 
 ```shell
 sysctl -w net.ipv4.ip_forward=1
@@ -44,7 +44,7 @@ So, lets look at the iptables rules required for this to work.
 # Allow TUN interface connections to VPN server
 iptables -A INPUT -i tun0 -j ACCEPT
 
- # Allow TUN interface connections to be forwarded through other interfaces
+# Allow TUN interface connections to be forwarded through other interfaces
 iptables -A FORWARD -i tun0 -j ACCEPT
 
 iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE
@@ -56,4 +56,9 @@ iptables -A FORWARD -i tun0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCE
 
 ## litekube-vpn-explain
 
-if you want to know more about this project, please look at [litekube-vpn-explain](./litekube-vpn-explain.md)
+if you want to know more about this project, please look at :
+
+- [litekube-vpn Principle Explaination doc](docs/litekube-vpn-explain.md)
+- [API Reference doc](docs/API-explain.md)
+- [PRD & System Design doc](docs/design-explain.md)
+- [Usage Demo doc](docs/usage-demo.md)

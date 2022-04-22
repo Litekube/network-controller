@@ -20,10 +20,10 @@ package main
 
 import (
 	"flag"
-	"litekube-vpn/config"
-	"litekube-vpn/utils"
-	client "litekube-vpn/vpn"
-	server "litekube-vpn/vpn"
+	"github.com/Litekube/litekube-vpn/config"
+	"github.com/Litekube/litekube-vpn/utils"
+	client "github.com/Litekube/litekube-vpn/vpn"
+	server "github.com/Litekube/litekube-vpn/vpn"
 	"os"
 )
 

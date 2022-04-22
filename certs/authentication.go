@@ -1,10 +1,10 @@
 package certs
 
 import (
+	"github.com/Litekube/litekube-vpn/config"
+	"github.com/Litekube/litekube-vpn/utils"
 	"github.com/litekube/LiteKube/pkg/global"
 	"github.com/rancher/dynamiclistener/cert"
-	"litekube-vpn/config"
-	"litekube-vpn/utils"
 	"net"
 )
 

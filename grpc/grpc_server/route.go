@@ -2,7 +2,7 @@ package grpc_server
 
 import (
 	"context"
-	"litekube-vpn/grpc/pb_gen"
+	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
 )
 
 func (s *GrpcServer) HelloWorld(ctx context.Context, req *pb_gen.HelloWorldRequest) (*pb_gen.HelloWorldResponse, error) {

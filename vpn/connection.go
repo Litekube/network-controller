@@ -21,10 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Litekube/litekube-vpn/contant"
+	"github.com/Litekube/litekube-vpn/sqlite"
 	"github.com/gorilla/websocket"
 	"io"
-	"litekube-vpn/contant"
-	"litekube-vpn/sqlite"
 	"net"
 	"time"
 )

@@ -4,9 +4,9 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
+	"github.com/Litekube/litekube-vpn/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
-	"litekube-vpn/utils"
 	"time"
 )
 

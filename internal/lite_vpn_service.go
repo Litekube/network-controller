@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"github.com/Litekube/litekube-vpn/certs"
+	"github.com/Litekube/litekube-vpn/config"
+	"github.com/Litekube/litekube-vpn/contant"
+	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
+	"github.com/Litekube/litekube-vpn/sqlite"
+	"github.com/Litekube/litekube-vpn/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
-	"litekube-vpn/certs"
-	"litekube-vpn/config"
-	"litekube-vpn/contant"
-	"litekube-vpn/grpc/pb_gen"
-	"litekube-vpn/sqlite"
-	"litekube-vpn/utils"
 )
 
 type LiteVpnService struct {

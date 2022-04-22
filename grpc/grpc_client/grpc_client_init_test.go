@@ -3,8 +3,8 @@ package grpc_client
 import (
 	"context"
 	"encoding/base64"
+	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
 	certutil "github.com/rancher/dynamiclistener/cert"
-	"litekube-vpn/grpc/pb_gen"
 	"testing"
 	"time"
 )
