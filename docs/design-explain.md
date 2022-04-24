@@ -70,10 +70,10 @@ END
 
 > 确定部分
 
+- 日志向上对齐，logging改为klog
 - 多网段
-
   - 可配置的，通过grpc请求动态增加网段
-
+  
   - 节点携带node-token和net-token表明节点身份和期待加入的网络
     - 具有不同的net-token的网络互不干扰
 
