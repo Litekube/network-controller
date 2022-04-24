@@ -15,7 +15,7 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package network
 
 import (
 	"bufio"
@@ -57,7 +57,7 @@ func newTun(name string) (iface *water.Interface, err error) {
 
 func setTunIP(iface *water.Interface, ip net.IP, subnet *net.IPNet) (err error) {
 	ip = ip.To4()
-	logger.Infof("parse vpnaddr ip:%+v,subnet:%+v", ip, subnet)
+	logger.Infof("parse network addr ip:%+v,subnet:%+v", ip, subnet)
 	// 10.1.1.1 valid & 10.1.1.2 invalid
 	if ip[3]%2 == 0 {
 		return invalidAddr

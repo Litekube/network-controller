@@ -1,15 +1,15 @@
 mode: server
 server:
-  # vpn server port to listen
+  # network server port to listen
   port: 6441
-  # vpn tls cert root dir
-  vpnCertDir: /root/go_project/network-controller/certs/test2/
+  # network tls cert root dir
+  networkCertDir: /root/go_project/network-controller/certs/test2/
   # grpc server port
   grpcPort: 6440
   # grpc tls cert root dir
   grpcCertDir: /root/go_project/network-controller/certs/test1/
   # server addr
-  vpnAddr: 10.1.1.1/24
+  networkAddr: 10.1.1.1/24
   # MTU
   mtu: 1400
   # allow communication between clients

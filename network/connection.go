@@ -15,7 +15,7 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package network
 
 import (
 	"encoding/json"
@@ -39,7 +39,7 @@ const (
 type connection struct {
 	id        int
 	ws        *websocket.Conn
-	server    *VpnServer
+	server    *NetworkServer
 	data      chan *Data
 	state     int // STATE_INIT / STATE_CONNECTED
 	ipAddress *net.IPNet
@@ -54,7 +54,7 @@ var upgrader = websocket.Upgrader{
 
 var maxId int = 0
 
-func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connection, error) {
+func NewConnection(ws *websocket.Conn, server *NetworkServer, token string) (*connection, error) {
 	if ws == nil {
 		panic("ws cannot be nil")
 	}
@@ -62,8 +62,8 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connec
 		panic("server cannot be nil")
 	}
 
-	vpnMgr := sqlite.VpnMgr{}
-	item, _ := vpnMgr.QueryByToken(token)
+	nm := sqlite.NetworkMgr{}
+	item, _ := nm.QueryByToken(token)
 	bindIp := ""
 	if item == nil {
 		return nil, errors.New(fmt.Sprintf("invalid token %+v", token))
@@ -78,12 +78,12 @@ func NewConnection(ws *websocket.Conn, server *VpnServer, token string) (*connec
 
 	// fix server gen token, no need insert now
 	if len(bindIp) == 0 {
-		//vpnMgr.Insert(sqlite.VpnMgr{
+		//nm.Insert(sqlite.NetworkMgr{
 		//	Token:  token,
 		//	State:  STATE_INIT,
 		//	BindIp: "",
 		//})
-		vpnMgr.UpdateStateByToken(contant.STATE_INIT, token)
+		nm.UpdateStateByToken(contant.STATE_INIT, token)
 	}
 
 	go c.writePump()
@@ -209,8 +209,8 @@ func (c *connection) dispatcher(p []byte) {
 				logger.Error(err)
 			}
 			if len(c.bindIp) == 0 {
-				vpnMgr := sqlite.VpnMgr{}
-				vpnMgr.UpdateIpByToken(cltIP.IP.String(), c.token)
+				nm := sqlite.NetworkMgr{}
+				nm.UpdateIpByToken(cltIP.IP.String(), c.token)
 			}
 
 			logger.Infof("get next IP from ippool %+v", cltIP)

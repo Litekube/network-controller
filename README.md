@@ -1,5 +1,5 @@
 # network-controller
-A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The network-controller is built on top of Linux's tun/tap device.
+A network controller implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The network-controller is built on top of Linux's tun/tap device.
 
 * [network-controller](#network-controller)
    * [Build and Install](#build-and-install)
@@ -48,7 +48,7 @@ iptables -t nat -A POSTROUTING -j MASQUERADE
 
 So, lets look at the iptables rules required for this to work.
 ```shell
-# Allow TUN interface connections to VPN server
+# Allow TUN interface connections to network server
 iptables -A INPUT -i tun0 -j ACCEPT
 
 # Allow TUN interface connections to be forwarded through other interfaces

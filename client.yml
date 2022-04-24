@@ -1,10 +1,10 @@
 mode: client
 client:
-  # vpn tls cert root dir
-  vpnCertDir: /root/go_project/network-controller/certs/test2/
-  # vpn server ip
+  # newwork tls cert root dir
+  networkCertDir: /root/go_project/network-controller/certs/test2/
+  # network server ip
   serverAddr: 101.43.253.110
-  # vpn server port
+  # network server port
   port: 6441
   # MTU
   mtu: 1400

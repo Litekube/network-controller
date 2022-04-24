@@ -32,8 +32,8 @@ func CheckGrpcCertConfig(tlsConfig config.TLSConfig) error {
 	return nil
 }
 
-func CheckVpnCertConfig(tlsConfig config.TLSConfig) error {
-	//generate for vpn
+func CheckNetworkCertConfig(tlsConfig config.TLSConfig) error {
+	//generate for network
 	//generate CA
 	regenGrpc, err := GenerateSigningCertKey(false, "network-controller", tlsConfig.CAFile, tlsConfig.CAKeyFile)
 	if err != nil {

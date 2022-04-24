@@ -6,8 +6,8 @@ import (
 
 func TestInit(t *testing.T) {
 	InitSqlite()
-	vpn := &VpnMgr{}
-	err := vpn.Insert(VpnMgr{
+	network := &NetworkMgr{}
+	err := network.Insert(NetworkMgr{
 		Token:  "999token",
 		State:  -1,
 		BindIp: "10.1.1.3",
@@ -15,34 +15,34 @@ func TestInit(t *testing.T) {
 	logger.Info(err)
 }
 
-func TestVpnMgr_QueryByToken(t *testing.T) {
+func TestNetworkMgr_QueryByToken(t *testing.T) {
 	InitSqlite()
-	vpn := &VpnMgr{}
-	vpns, err := vpn.QueryByToken("wannatoken")
-	logger.Infof("%+v", vpns)
+	network := &NetworkMgr{}
+	networks, err := network.QueryByToken("wannatoken")
+	logger.Infof("%+v", networks)
 	logger.Info(err)
 }
 
-func TestVpnMgr_QueryByIp(t *testing.T) {
+func TestNetworkMgr_QueryByIp(t *testing.T) {
 	InitSqlite()
-	vpn := &VpnMgr{}
-	vpns, err := vpn.QueryByIp("10.1.1.3")
-	logger.Infof("%+v", vpns)
+	network := &NetworkMgr{}
+	networks, err := network.QueryByIp("10.1.1.3")
+	logger.Infof("%+v", networks)
 	logger.Info(err)
 }
 
-func TestVpnMgr_UpdateByIp(t *testing.T) {
+func TestNetworkMgr_UpdateByIp(t *testing.T) {
 	InitSqlite()
-	vpn := &VpnMgr{}
-	res, err := vpn.UpdateStateByToken(11, "wannatoken")
+	network := &NetworkMgr{}
+	res, err := network.UpdateStateByToken(11, "wannatoken")
 	logger.Infof("%+v", res)
 	logger.Info(err)
 }
 
-func TestVpnMgr_QueryLogestIdle(t *testing.T) {
+func TestNetworkMgr_QueryLogestIdle(t *testing.T) {
 	InitSqlite()
-	vpn := &VpnMgr{}
-	res, err := vpn.QueryLogestIdle()
+	network := &NetworkMgr{}
+	res, err := network.QueryLogestIdle()
 	logger.Infof("%+v", res)
 	logger.Info(err)
 }

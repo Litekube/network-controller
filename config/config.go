@@ -28,20 +28,20 @@ import (
 
 // Server Config
 type ServerConfig struct {
-	Port        int    `yaml:"port"`
-	VpnCertDir  string `yaml:"vpnCertDir"`
-	GrpcPort    int    `yaml:"grpcPort"`
-	GrpcCertDir string `yaml:"grpcCertDir"`
+	Port           int    `yaml:"port"`
+	NetworkCertDir string `yaml:"networkCertDir"`
+	GrpcPort       int    `yaml:"grpcPort"`
+	GrpcCertDir    string `yaml:"grpcCertDir"`
 
 	ListenAddr      string `yaml:"listenAddr"`
-	VpnAddr         string `yaml:"vpnAddr"`
+	NetworkAddr     string `yaml:"networkAddr"`
 	MTU             int    `yaml:"mtu"`
 	Interconnection bool   `yaml:"interconnection"`
 }
 
 // Client Config
 type ClientConfig struct {
-	VpnCertDir      string `yaml:"vpnCertDir"`
+	NetworkCertDir  string `yaml:"networkCertDir"`
 	ServerAddr      string `yaml:"serverAddr"`
 	Port            int    `yaml:"port"`
 	MTU             int    `yaml:"mut"`
@@ -49,7 +49,7 @@ type ClientConfig struct {
 	RedirectGateway bool   `yaml:"redirectGateway"`
 }
 
-type VpnConfig struct {
+type NetworkConfig struct {
 	Mode   string       `yaml:"mode"`
 	Server ServerConfig `yaml:"server"`
 	Client ClientConfig `yaml:"client"`
@@ -57,7 +57,7 @@ type VpnConfig struct {
 
 // return server/client config
 func ParseConfig(filename string) (interface{}, error) {
-	cfg := &VpnConfig{}
+	cfg := &NetworkConfig{}
 
 	File, err := ioutil.ReadFile(filename)
 	if err != nil {

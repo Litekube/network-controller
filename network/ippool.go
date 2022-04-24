@@ -15,7 +15,7 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package network
 
 import (
 	"errors"
@@ -31,7 +31,7 @@ import (
 assign unique ip for client
 */
 
-type VpnIpPool struct {
+type NetworkIpPool struct {
 	subnet *net.IPNet
 	pool   [127]int32 // map cache
 }
@@ -39,7 +39,7 @@ type VpnIpPool struct {
 var poolFull = errors.New("IP Pool Full")
 
 // bind existed ip or get an empty ip
-func (p *VpnIpPool) next(bindIp string) (*net.IPNet, error) {
+func (p *NetworkIpPool) next(bindIp string) (*net.IPNet, error) {
 
 	// assign ip+mask
 	ipnet := &net.IPNet{
@@ -75,13 +75,13 @@ func (p *VpnIpPool) next(bindIp string) (*net.IPNet, error) {
 
 	// find db with LRU
 	if !found {
-		vpnMgr := sqlite.VpnMgr{}
-		item, _ := vpnMgr.QueryLogestIdle()
+		nm := sqlite.NetworkMgr{}
+		item, _ := nm.QueryLogestIdle()
 		if item != nil {
 			// no need to set cache=0, just delete old item from sqlite
 			found = true
 			i, _ = strconv.Atoi(strings.Split(bindIp, ".")[3])
-			res, err := vpnMgr.DeleteById(item.Id)
+			res, err := nm.DeleteById(item.Id)
 			if !res || err != nil {
 				logger.Errorf("fail to delete idle item: %+v", err)
 				return nil, errors.New(fmt.Sprint("fail to delete idle item: %+v", err.Error()))
@@ -98,7 +98,7 @@ func (p *VpnIpPool) next(bindIp string) (*net.IPNet, error) {
 }
 
 // release ip
-func (p *VpnIpPool) release(ip net.IP) {
+func (p *NetworkIpPool) release(ip net.IP) {
 	defer func() {
 		// recover only work in defer part
 		// if normal, return nil
@@ -113,7 +113,7 @@ func (p *VpnIpPool) release(ip net.IP) {
 	p.pool[i] = 0
 }
 
-func (p *VpnIpPool) releaseByTag(tag int) {
+func (p *NetworkIpPool) releaseByTag(tag int) {
 	defer func() {
 		// recover only work in defer part
 		// if normal, return nil

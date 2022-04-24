@@ -15,7 +15,7 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package network
 
 import (
 	"crypto/tls"
@@ -73,10 +73,10 @@ func NewClient(cfg config.ClientConfig) *Client {
 		state:   0,
 		routes:  make([]string, 0, 1024),
 		ClientTLSConfig: config.TLSConfig{
-			CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
-			CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
-			ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
-			ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+			CAFile:         filepath.Join(cfg.NetworkCertDir, contant.CAFile),
+			CAKeyFile:      filepath.Join(cfg.NetworkCertDir, contant.CAKeyFile),
+			ClientCertFile: filepath.Join(cfg.NetworkCertDir, contant.ClientCertFile),
+			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
 	return client
@@ -103,7 +103,7 @@ func (client *Client) Run() error {
 	addRoute(srvDest, net_gateway, net_nic)
 	client.routes = append(client.routes, srvDest)
 
-	// build ws connect to vpn server
+	// build ws connect to network server
 	srvAdr := fmt.Sprintf("%s:%d", client.cfg.ServerAddr, client.cfg.Port)
 	u := url.URL{Scheme: "wss", Host: srvAdr, Path: "/ws"}
 	header := http.Header{}

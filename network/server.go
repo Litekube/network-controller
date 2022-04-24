@@ -16,16 +16,14 @@
  *
  */
 
-package vpn
+package network
 
 import (
 	"fmt"
-	"github.com/Litekube/network-controller/certs"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/grpc_server"
 	"github.com/Litekube/network-controller/sqlite"
-	"github.com/Litekube/network-controller/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"
@@ -42,7 +40,7 @@ import (
 	"time"
 )
 
-type VpnServer struct {
+type NetworkServer struct {
 	// config
 	cfg config.ServerConfig
 	// interface
@@ -50,7 +48,7 @@ type VpnServer struct {
 	// subnet
 	ipnet *net.IPNet
 	// IP Pool
-	ippool *VpnIpPool
+	ippool *NetworkIpPool
 	// client peers, key is the mac address, value is a HopPeer record
 	// Registered clients clientip-connection
 	clients map[string]*connection
@@ -60,30 +58,30 @@ type VpnServer struct {
 	unregister chan *connection
 	//outData        *Data
 	//inData         chan *Data
-	toIface        chan []byte
-	wg             sync.WaitGroup
-	unRegisterCh   chan string
-	idleCheckTimer *time.Ticker
-	vpnTLSConfig   config.TLSConfig
+	toIface          chan []byte
+	wg               sync.WaitGroup
+	unRegisterCh     chan string
+	idleCheckTimer   *time.Ticker
+	networkTLSConfig config.TLSConfig
 }
 
-var vpnServer *VpnServer
+var networkServer *NetworkServer
 
-//func GetVpnServer() *VpnServer {
-//	return vpnServer
+//func GetNetworkServer() *NetworkServer {
+//	return networkServer
 //}
 
-func NewServer(cfg config.ServerConfig) *VpnServer {
+func NewServer(cfg config.ServerConfig) *NetworkServer {
 
 	if cfg.MTU != 0 {
 		MTU = cfg.MTU
 	}
 
-	vpnServer = &VpnServer{
+	networkServer = &NetworkServer{
 		cfg:            cfg,
 		iface:          nil,
 		ipnet:          nil,
-		ippool:         &VpnIpPool{},
+		ippool:         &NetworkIpPool{},
 		clients:        make(map[string]*connection),
 		register:       make(chan *connection),
 		unregister:     make(chan *connection),
@@ -91,72 +89,72 @@ func NewServer(cfg config.ServerConfig) *VpnServer {
 		wg:             sync.WaitGroup{},
 		unRegisterCh:   nil,
 		idleCheckTimer: time.NewTicker(contant.IdleTokenCheckDuration),
-		vpnTLSConfig: config.TLSConfig{
-			CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
-			CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
-			ServerCertFile: filepath.Join(cfg.VpnCertDir, contant.ServerCertFile),
-			ServerKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ServerKeyFile),
-			ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
-			ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+		networkTLSConfig: config.TLSConfig{
+			CAFile:         filepath.Join(cfg.NetworkCertDir, contant.CAFile),
+			CAKeyFile:      filepath.Join(cfg.NetworkCertDir, contant.CAKeyFile),
+			ServerCertFile: filepath.Join(cfg.NetworkCertDir, contant.ServerCertFile),
+			ServerKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ServerKeyFile),
+			ClientCertFile: filepath.Join(cfg.NetworkCertDir, contant.ClientCertFile),
+			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
-	return vpnServer
+	return networkServer
 }
 
-func (server *VpnServer) Run() error {
+func (server *NetworkServer) Run() error {
 
 	unRegisterCh := make(chan string, 8)
-	vpnServer.unRegisterCh = unRegisterCh
+	networkServer.unRegisterCh = unRegisterCh
 	go grpc_server.StartGrpcServer(server.cfg, unRegisterCh)
 
-	utils.CreateDir(server.cfg.VpnCertDir)
-	err := certs.CheckVpnCertConfig(vpnServer.vpnTLSConfig)
-	if err != nil {
-		return err
-	}
+	//utils.CreateDir(server.cfg.NetworkCertDir)
+	//err := certs.CheckNetworkCertConfig(networkServer.networkTLSConfig)
+	//if err != nil {
+	//	return err
+	//}
 	// sync cache with db
-	vpnServer.wg = sync.WaitGroup{}
-	vpnServer.wg.Add(1)
-	go vpnServer.initSyncBindIpWithDb()
-	go vpnServer.handleGrpcUnRegister()
+	networkServer.wg = sync.WaitGroup{}
+	networkServer.wg.Add(1)
+	go networkServer.initSyncBindIpWithDb()
+	go networkServer.handleGrpcUnRegister()
 
 	iface, err := newTun("")
 	if err != nil {
 		return err
 	}
-	vpnServer.iface = iface
+	networkServer.iface = iface
 
-	// vpnaddr = 10.1.1.1/24
-	ip, subnet, err := net.ParseCIDR(server.cfg.VpnAddr)
+	// networkaddr = 10.1.1.1/24
+	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
 	err = setTunIP(iface, ip, subnet)
 	if err != nil {
 		return err
 	}
-	vpnServer.ipnet = &net.IPNet{ip, subnet.Mask}
-	vpnServer.ippool.subnet = subnet
+	networkServer.ipnet = &net.IPNet{ip, subnet.Mask}
+	networkServer.ippool.subnet = subnet
 
-	go vpnServer.cleanUp()
-	go vpnServer.run()
+	go networkServer.cleanUp()
+	go networkServer.run()
 
-	vpnServer.handleInterface()
+	networkServer.handleInterface()
 
 	// http handle for client to connect
 	router := mux.NewRouter()
-	router.HandleFunc("/ws", vpnServer.serveWs)
-	addr := fmt.Sprintf(":%d", vpnServer.cfg.Port)
+	router.HandleFunc("/ws", networkServer.serveWs)
+	addr := fmt.Sprintf(":%d", networkServer.cfg.Port)
 
 	// wait for cache&db sync
-	vpnServer.wg.Wait()
+	networkServer.wg.Wait()
 	logger.Infof("server ready to ListenAndServe at %+v", addr)
 	//err = http.ListenAndServe(addr, router)
-	err = http.ListenAndServeTLS(addr, vpnServer.vpnTLSConfig.ServerCertFile, vpnServer.vpnTLSConfig.ServerKeyFile, router)
+	err = http.ListenAndServeTLS(addr, networkServer.networkTLSConfig.ServerCertFile, networkServer.networkTLSConfig.ServerKeyFile, router)
 	if err != nil {
 		logger.Panicf("ListenAndServe: %+v", err.Error())
 	}
 	return nil
 }
 
-func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
+func (server *NetworkServer) serveWs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
@@ -177,15 +175,15 @@ func (server *VpnServer) serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (server *VpnServer) run() {
+func (server *NetworkServer) run() {
 	for {
 		select {
 		case c := <-server.register:
 			// add to clients
 			logger.Infof("Connection registered: %+v", c.ipAddress.IP.String())
 			server.clients[c.ipAddress.IP.String()] = c
-			vpnMgr := sqlite.VpnMgr{}
-			vpnMgr.UpdateStateByToken(contant.STATE_CONNECTED, c.token)
+			nm := sqlite.NetworkMgr{}
+			nm.UpdateStateByToken(contant.STATE_CONNECTED, c.token)
 			break
 
 		case c := <-server.unregister:
@@ -200,8 +198,8 @@ func (server *VpnServer) run() {
 				if c.ipAddress != nil {
 					// unregister for stable ip
 					// server.ippool.release(c.ipAddress.IP)
-					vpnMgr := sqlite.VpnMgr{}
-					vpnMgr.UpdateStateByToken(contant.STATE_IDLE, c.token)
+					nm := sqlite.NetworkMgr{}
+					nm.UpdateStateByToken(contant.STATE_IDLE, c.token)
 				}
 				logger.Infof("unregister Connection: %+v, current active clients number: %+v", c.ipAddress.IP, len(server.clients))
 			}
@@ -210,7 +208,7 @@ func (server *VpnServer) run() {
 	}
 }
 
-func (server *VpnServer) handleInterface() {
+func (server *NetworkServer) handleInterface() {
 	// network packet to interface
 	go func() {
 		for {
@@ -260,7 +258,7 @@ func (server *VpnServer) handleInterface() {
 	}()
 }
 
-func (server *VpnServer) isConnectionBetweenClients(header *ipv4.Header) bool {
+func (server *NetworkServer) isConnectionBetweenClients(header *ipv4.Header) bool {
 
 	// srcip!= server ip & desip=one client ip
 	if header.Src.String() != header.Dst.String() && header.Src.String() != server.ipnet.IP.String() && server.ippool.subnet.Contains(header.Dst) {
@@ -270,7 +268,7 @@ func (server *VpnServer) isConnectionBetweenClients(header *ipv4.Header) bool {
 }
 
 // server exit gracefully
-func (server *VpnServer) cleanUp() {
+func (server *NetworkServer) cleanUp() {
 
 	c := make(chan os.Signal, 1)
 	// watch ctrl+c or kill pid
@@ -288,10 +286,10 @@ func (server *VpnServer) cleanUp() {
 	os.Exit(0)
 }
 
-func (server *VpnServer) initSyncBindIpWithDb() error {
+func (server *NetworkServer) initSyncBindIpWithDb() error {
 	defer server.wg.Done()
-	vpnMgr := sqlite.VpnMgr{}
-	ipList, err := vpnMgr.QueryAll()
+	nm := sqlite.NetworkMgr{}
+	ipList, err := nm.QueryAll()
 	if err != nil {
 		return err
 	}
@@ -301,11 +299,11 @@ func (server *VpnServer) initSyncBindIpWithDb() error {
 		if len(ip) != 0 {
 			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
 			// no Concurrency
-			vpnServer.ippool.pool[tag] = 1
+			networkServer.ippool.pool[tag] = 1
 		}
 	}
 	// ignore exsit err, guarantee for reserverd
-	vpnMgr.Insert(sqlite.VpnMgr{
+	nm.Insert(sqlite.NetworkMgr{
 		Token:  "reserverd",
 		State:  -1,
 		BindIp: "",
@@ -313,7 +311,7 @@ func (server *VpnServer) initSyncBindIpWithDb() error {
 	return nil
 }
 
-func (server *VpnServer) handleGrpcUnRegister() error {
+func (server *NetworkServer) handleGrpcUnRegister() error {
 	logger.Infof("start handle unregister ip channel")
 	for {
 		select {
@@ -331,8 +329,8 @@ func (server *VpnServer) handleGrpcUnRegister() error {
 			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
 			server.ippool.releaseByTag(tag)
 		case <-server.idleCheckTimer.C:
-			vpnMgr := sqlite.VpnMgr{}
-			vpnMgr.DeleteUnRegisteredIdle(contant.IdleTokenExpireDuration)
+			nm := sqlite.NetworkMgr{}
+			nm.DeleteUnRegisteredIdle(contant.IdleTokenExpireDuration)
 		}
 	}
 }

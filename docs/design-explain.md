@@ -10,13 +10,13 @@
 > sqlite
 
 ```
-sqlite3 /tmp/litevpn.db
+sqlite3 /tmp/litekube-nc.db
 ```
 
-- sqlite表vpn_mgr结构设计
+- sqlite表network_mgr结构设计
 
 ```sql
-create table if not exists "vpn_mgr" (
+create table if not exists "network_mgr" (
 		"id" integer primary key autoincrement,
 		"token" text not null unique,
 		"state" integer not null,
@@ -30,9 +30,9 @@ create table if not exists "vpn_mgr" (
   - 由于sqlite不支持on update关键字，故定义update_time_trigger实现update_time功能
 
 ```sql
-CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_ip,create_time ON vpn_mgr
+CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_ip,create_time ON network_mgr
 BEGIN
-	UPDATE vpn_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
+	UPDATE network_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
 END
 ```
 
@@ -40,9 +40,9 @@ END
 
 - 控制面板基于tcp gRPC+protobuf实现通信交互服务
   - 安全通信，支持tls
-- 分离grpc和vpn两套证书
+- 分离grpc和network两套证书
 
-- 获取本机已连接的vpn ip（连接过且未取消注册的）
+- 获取本机已连接的network ip（连接过且未取消注册的）
 - 可通过设置摧毁网络，主机自动DHCP到全新的ip，后续重连ip依旧与主机绑定，任意一台服务器，重连以后具有稳定的ip 
   - network manager端生成unique token并和组网ip绑定
     - server端统一认证
@@ -51,7 +51,7 @@ END
   - 此处的问题在于，需要保留ip，可能存在ip不足的问题，采用LRU策略，根据update_time删除最久没使用的ip
     - ippool相当于cache，和sqlite数据保持同步
       - server启动开启cache同步协程，将sqlite持久化数据映射到cache中
-    - 分发新token的vpn ip的处理办法
+    - 分发新token的network ip的处理办法
       - 首先查询sqlite，根据token检查是否已经存在bindIp
         - 有：直接用bindip
         - 无：从cache中找未分配的ip
@@ -60,11 +60,11 @@ END
 - 可注销注册(删除服务器连接，下次建立连接可以生成别的ip)
   - 取消node和组网ip绑定，删除sqlite条目，同步cache=0
 - yaml格式的配置文件 client.yml/server.yml，具体字段含义见配置文件注释
-  - 网段可任意指定，配置文件中vpnAddr字段
+  - 网段可任意指定，配置文件中networkAddr字段
 - 可查询网络状态(失联，连接等)
 - 为了便于LiteKube交互使用，初始设置一个特殊的node-token，设置值为 "reserverd" (非16位避免被占用），整个网段只会有一台
   node-token="reserverd"总是假定为已经完成了bootstrap，即认为存储有node-token="reserverd"的机器，应该已经具备了client证书
-  - vpn server启动时goroutine校验，无此条目则插入
+  - network server启动时goroutine校验，无此条目则插入
 
 ## 后期迭代
 
@@ -79,7 +79,7 @@ END
 
 > 待验证部分
 
-- vpn-server多副本、高可用，支持client端自动切换vpn-server
+- network-server多副本、高可用，支持client端自动切换network-server
   - 涉及到数据迁移、“脑裂”问题，后期工作验证合理性、可行性
 
 - （如果需要）network-controller gRPC CLI 工具

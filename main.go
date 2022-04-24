@@ -21,9 +21,9 @@ package main
 import (
 	"flag"
 	"github.com/Litekube/network-controller/config"
+	client "github.com/Litekube/network-controller/network"
+	server "github.com/Litekube/network-controller/network"
 	"github.com/Litekube/network-controller/utils"
-	client "github.com/Litekube/network-controller/vpn"
-	server "github.com/Litekube/network-controller/vpn"
 	"os"
 )
 
@@ -64,12 +64,12 @@ func main() {
 
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
-		vpnServer := server.NewServer(cfg)
-		err = vpnServer.Run()
+		networkServer := server.NewServer(cfg)
+		err = networkServer.Run()
 		checkerr(err)
 	case config.ClientConfig:
-		client := client.NewClient(cfg)
-		err := client.Run()
+		networkClient := client.NewClient(cfg)
+		err := networkClient.Run()
 		checkerr(err)
 	default:
 		logger.Error("Invalid config file")

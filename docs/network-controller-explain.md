@@ -1,13 +1,13 @@
 # network-controller-explain
 
 * [network-controller-explain](#network-controller-explain)
-   * [vpn C/S交互关系](#vpn-cs交互关系)
+   * [network C/S交互关系](#network-cs交互关系)
       * [C/S通信](#cs通信)
       * [虚拟网卡 &amp; 路由](#虚拟网卡--路由)
    * [Code detail](#code-detail)
       * [Interface.go](#interfacego)
 
-## vpn C/S交互关系
+## network C/S交互关系
 
 ### C/S通信
 
@@ -43,7 +43,7 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 - client端
   - 目的地址10.1.1.0/24的请求 gateway到10.1.1.4，在gateway到0.0.0.0 flag=host 出去
-  - 目的地址101.43.253.110(vpn-server)的请求，gateway到{gateway}（即内网地址 ens160网卡），通过ens160出去
+  - 目的地址101.43.253.110(network-server)的请求，gateway到{gateway}（即内网地址 ens160网卡），通过ens160出去
 
 ```shell
 # ifconfig

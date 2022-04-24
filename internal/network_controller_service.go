@@ -13,23 +13,23 @@ import (
 	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
-type LiteVpnService struct {
-	unRegisterCh  chan string
-	grpcTlsConfig config.TLSConfig
-	vpnTlsConfig  config.TLSConfig
+type NetworkControllerService struct {
+	unRegisterCh     chan string
+	grpcTlsConfig    config.TLSConfig
+	networkTlsConfig config.TLSConfig
 }
 
 var logger = utils.GetLogger()
 
-func NewLiteVpnService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, vpnTlsConfig config.TLSConfig) *LiteVpnService {
-	return &LiteVpnService{
-		unRegisterCh:  unRegisterCh,
-		grpcTlsConfig: grpcTlsConfig,
-		vpnTlsConfig:  vpnTlsConfig,
+func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig) *NetworkControllerService {
+	return &NetworkControllerService{
+		unRegisterCh:     unRegisterCh,
+		grpcTlsConfig:    grpcTlsConfig,
+		networkTlsConfig: networkTlsConfig,
 	}
 }
 
-func (service *LiteVpnService) CheckConnState(ctx context.Context, req *pb_gen.CheckConnStateRequest) (*pb_gen.CheckConnResponse, error) {
+func (service *NetworkControllerService) CheckConnState(ctx context.Context, req *pb_gen.CheckConnStateRequest) (*pb_gen.CheckConnResponse, error) {
 
 	wrappedResp := func(code, message, bindIp string, state int32) (resp *pb_gen.CheckConnResponse, err error) {
 		if code != contant.STATUS_OK {
@@ -50,8 +50,8 @@ func (service *LiteVpnService) CheckConnState(ctx context.Context, req *pb_gen.C
 		return wrappedResp(contant.STATUS_BADREQUEST, "token can't be empty", "", -1)
 	}
 
-	vpnMgr := sqlite.VpnMgr{}
-	item, err := vpnMgr.QueryByToken(req.Token)
+	nm := sqlite.NetworkMgr{}
+	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
 		return wrappedResp(contant.STATUS_OK, err.Error(), "", -1)
 	} else if err != nil {
@@ -61,7 +61,7 @@ func (service *LiteVpnService) CheckConnState(ctx context.Context, req *pb_gen.C
 	return wrappedResp(contant.STATUS_OK, contant.MESSAGE_OK, item.BindIp, int32(item.State))
 }
 
-func (service *LiteVpnService) UnRegister(ctx context.Context, req *pb_gen.UnRegisterRequest) (*pb_gen.UnRegisterResponse, error) {
+func (service *NetworkControllerService) UnRegister(ctx context.Context, req *pb_gen.UnRegisterRequest) (*pb_gen.UnRegisterResponse, error) {
 
 	wrappedResp := func(code, message string, result bool) (resp *pb_gen.UnRegisterResponse, err error) {
 		if code != contant.STATUS_OK {
@@ -81,15 +81,15 @@ func (service *LiteVpnService) UnRegister(ctx context.Context, req *pb_gen.UnReg
 		return wrappedResp(contant.STATUS_BADREQUEST, "token can't be empty", false)
 	}
 
-	vpnMgr := sqlite.VpnMgr{}
-	item, err := vpnMgr.QueryByToken(req.Token)
+	nm := sqlite.NetworkMgr{}
+	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
 		return wrappedResp(contant.STATUS_OK, err.Error(), false)
 	} else if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), false)
 	}
 
-	result, err := vpnMgr.DeleteById(item.Id)
+	result, err := nm.DeleteById(item.Id)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), result)
 	}
@@ -98,7 +98,7 @@ func (service *LiteVpnService) UnRegister(ctx context.Context, req *pb_gen.UnReg
 	return wrappedResp(contant.STATUS_OK, contant.MESSAGE_OK, result)
 }
 
-func (service *LiteVpnService) GetRegistedIp(ctx context.Context, req *pb_gen.GetRegistedIpRequest) (*pb_gen.GetRegistedIpResponse, error) {
+func (service *NetworkControllerService) GetRegistedIp(ctx context.Context, req *pb_gen.GetRegistedIpRequest) (*pb_gen.GetRegistedIpResponse, error) {
 
 	wrappedResp := func(code, message, ip string) (resp *pb_gen.GetRegistedIpResponse, err error) {
 		if code != contant.STATUS_OK {
@@ -118,8 +118,8 @@ func (service *LiteVpnService) GetRegistedIp(ctx context.Context, req *pb_gen.Ge
 		return wrappedResp(contant.STATUS_BADREQUEST, "token can't be empty", "")
 	}
 
-	vpnMgr := sqlite.VpnMgr{}
-	item, err := vpnMgr.QueryByToken(req.Token)
+	nm := sqlite.NetworkMgr{}
+	item, err := nm.QueryByToken(req.Token)
 	if item == nil {
 		return wrappedResp(contant.STATUS_OK, err.Error(), "")
 	} else if err != nil {
@@ -129,32 +129,32 @@ func (service *LiteVpnService) GetRegistedIp(ctx context.Context, req *pb_gen.Ge
 	return wrappedResp(contant.STATUS_OK, contant.MESSAGE_OK, item.BindIp)
 }
 
-func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetTokenRequest) (*pb_gen.GetTokenResponse, error) {
+func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_gen.GetTokenRequest) (*pb_gen.GetTokenResponse, error) {
 
 	wrappedResp := func(code, message, token string) (resp *pb_gen.GetTokenResponse, err error) {
 		if code != contant.STATUS_OK {
 			err = errors.New(message)
 		}
 		resp = &pb_gen.GetTokenResponse{
-			Code:           code,
-			Message:        message,
-			Token:          token,
-			GrpcCaCert:     "",
-			GrpcClientKey:  "",
-			GrpcClientCert: "",
-			VpnCaCert:      "",
-			VpnClientKey:   "",
-			VpnClientCert:  "",
+			Code:              code,
+			Message:           message,
+			Token:             token,
+			GrpcCaCert:        "",
+			GrpcClientKey:     "",
+			GrpcClientCert:    "",
+			NetworkCaCert:     "",
+			NetworkClientKey:  "",
+			NetworkClientCert: "",
 		}
 		logger.Debugf("resp: %+v", resp)
 		return
 	}
 
 	token := utils.GetUniqueToken()
-	vpnMgr := sqlite.VpnMgr{}
+	nm := sqlite.NetworkMgr{}
 	// no need
-	//item, err := vpnMgr.QueryByToken(token)
-	err := vpnMgr.Insert(sqlite.VpnMgr{
+	//item, err := nm.QueryByToken(token)
+	err := nm.Insert(sqlite.NetworkMgr{
 		Token:  token,
 		State:  contant.STATE_IDLE,
 		BindIp: "",
@@ -179,18 +179,18 @@ func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetToke
 	resp.GrpcClientKey = base64.StdEncoding.EncodeToString(keyBytes)
 	resp.GrpcClientCert = base64.StdEncoding.EncodeToString(certBytes)
 
-	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "network-controller-client", []string{"network-controller"}, service.vpnTlsConfig.CAFile, service.vpnTlsConfig.CAKeyFile, service.vpnTlsConfig.ClientCertFile, service.vpnTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "network-controller-client", []string{"network-controller"}, service.networkTlsConfig.CAFile, service.networkTlsConfig.CAKeyFile, service.networkTlsConfig.ClientCertFile, service.networkTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
 
-	// load vpn ca.pem client.pem client-key.pem
-	vpnCaCert, err := certs.LoadCertificate(service.vpnTlsConfig.CAFile)
+	// load network ca.pem client.pem client-key.pem
+	NetworkCaCert, err := certs.LoadCertificate(service.networkTlsConfig.CAFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
-	resp.VpnCaCert = base64.StdEncoding.EncodeToString(certutil.EncodeCertPEM(vpnCaCert))
-	resp.VpnClientKey = base64.StdEncoding.EncodeToString(keyBytes)
-	resp.VpnClientCert = base64.StdEncoding.EncodeToString(certBytes)
+	resp.NetworkCaCert = base64.StdEncoding.EncodeToString(certutil.EncodeCertPEM(NetworkCaCert))
+	resp.NetworkClientKey = base64.StdEncoding.EncodeToString(keyBytes)
+	resp.NetworkClientCert = base64.StdEncoding.EncodeToString(certBytes)
 	return resp, nil
 }

@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/Litekube/network-controller/certs"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
@@ -16,20 +15,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os"
 	"path/filepath"
 )
 
 type GrpcServer struct {
-	*pb_gen.UnimplementedLiteKubeVpnServiceServer
-	port          int
-	UnRegisterCh  chan string
-	service       *internal.LiteVpnService
-	grpcTlsConfig config.TLSConfig
-	vpnTlsConfig  config.TLSConfig
+	*pb_gen.UnimplementedLiteKubeNCServiceServer
+	port             int
+	UnRegisterCh     chan string
+	service          *internal.NetworkControllerService
+	grpcTlsConfig    config.TLSConfig
+	networkTlsConfig config.TLSConfig
 }
 
-var LiteVpnSocket = "unix://litevpn.sock"
 var logger = utils.GetLogger()
 var gServer *GrpcServer
 
@@ -45,27 +42,27 @@ func newGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 			ClientCertFile: filepath.Join(cfg.GrpcCertDir, contant.ClientCertFile),
 			ClientKeyFile:  filepath.Join(cfg.GrpcCertDir, contant.ClientKeyFile),
 		},
-		vpnTlsConfig: config.TLSConfig{
-			CAFile:         filepath.Join(cfg.VpnCertDir, contant.CAFile),
-			CAKeyFile:      filepath.Join(cfg.VpnCertDir, contant.CAKeyFile),
-			ServerCertFile: filepath.Join(cfg.VpnCertDir, contant.ServerCertFile),
-			ServerKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ServerKeyFile),
-			ClientCertFile: filepath.Join(cfg.VpnCertDir, contant.ClientCertFile),
-			ClientKeyFile:  filepath.Join(cfg.VpnCertDir, contant.ClientKeyFile),
+		networkTlsConfig: config.TLSConfig{
+			CAFile:         filepath.Join(cfg.NetworkCertDir, contant.CAFile),
+			CAKeyFile:      filepath.Join(cfg.NetworkCertDir, contant.CAKeyFile),
+			ServerCertFile: filepath.Join(cfg.NetworkCertDir, contant.ServerCertFile),
+			ServerKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ServerKeyFile),
+			ClientCertFile: filepath.Join(cfg.NetworkCertDir, contant.ClientCertFile),
+			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
-	s.service = internal.NewLiteVpnService(unRegisterCh, s.grpcTlsConfig, s.vpnTlsConfig)
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig)
 	return s
 }
 
 func StartGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) {
 	gServer = newGrpcServer(cfg, unRegisterCh)
-	utils.CreateDir(cfg.GrpcCertDir)
-	err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
-	if err != nil {
-		logger.Error(err)
-	}
-	err = gServer.startGrpcServerTcp()
+	//utils.CreateDir(cfg.GrpcCertDir)
+	//err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
+	//if err != nil {
+	//	logger.Error(err)
+	//}
+	err := gServer.startGrpcServerTcp()
 	if err != nil {
 		logger.Error(err)
 	}
@@ -115,34 +112,10 @@ func (s *GrpcServer) startGrpcServerTcp() error {
 	// register reflection for grpcurl service
 	reflection.Register(server)
 	// register service
-	pb_gen.RegisterLiteKubeVpnServiceServer(server, s)
+	pb_gen.RegisterLiteKubeNCServiceServer(server, s)
 	logger.Infof("grpc server ready to serve at %+v", tcpAddr)
 	if err := server.Serve(lis); err != nil {
 		logger.Errorf("grpc server failed to serve: %v", err)
-		return err
-	}
-	return nil
-}
-
-func (s *GrpcServer) startGrpcServerUDS() error {
-	os.Remove("/tmp/litevpn.sock")
-	server_addr, err := net.ResolveUnixAddr("unix", "/tmp/litevpn.sock")
-	if err != nil {
-		logger.Errorf("failed to resolve unix addr err:%+v")
-		return err
-	}
-	fmt.Println(server_addr)
-	lis, err := net.ListenUnix("unix", server_addr)
-	if err != nil {
-		logger.Errorf("failed to listen: %v", err)
-		return err
-	}
-
-	gs := grpc.NewServer()
-	pb_gen.RegisterLiteKubeVpnServiceServer(gs, s)
-	err = gs.Serve(lis)
-	if err != nil {
-		logger.Errorf("failed to listen: %v", err)
 		return err
 	}
 	return nil

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type VpnMgr struct {
+type NetworkMgr struct {
 	Id         int64
 	Token      string
 	State      int
@@ -14,9 +14,9 @@ type VpnMgr struct {
 	UpdateTime time.Time
 }
 
-func (vpn *VpnMgr) Insert(u VpnMgr) error {
+func (network *NetworkMgr) Insert(u NetworkMgr) error {
 	db = GetDb()
-	sql := `insert into vpn_mgr (token, state, bind_ip) values(?,?,?)`
+	sql := `insert into network_mgr (token, state, bind_ip) values(?,?,?)`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return err
@@ -25,9 +25,9 @@ func (vpn *VpnMgr) Insert(u VpnMgr) error {
 	return err
 }
 
-func (vpn *VpnMgr) InsertToken(token string) error {
+func (network *NetworkMgr) InsertToken(token string) error {
 	db = GetDb()
-	sql := `insert into vpn_mgr (token) values()`
+	sql := `insert into network_mgr (token) values()`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return err
@@ -36,9 +36,9 @@ func (vpn *VpnMgr) InsertToken(token string) error {
 	return err
 }
 
-func (vpn *VpnMgr) QueryAll() (bindIps []string, e error) {
+func (network *NetworkMgr) QueryAll() (bindIps []string, e error) {
 	db = GetDb()
-	sql := `select bind_ip from vpn_mgr`
+	sql := `select bind_ip from network_mgr`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return nil, err
@@ -56,9 +56,9 @@ func (vpn *VpnMgr) QueryAll() (bindIps []string, e error) {
 	return result, nil
 }
 
-func (vpn *VpnMgr) QueryByToken(token string) (l *VpnMgr, e error) {
+func (network *NetworkMgr) QueryByToken(token string) (l *NetworkMgr, e error) {
 	db = GetDb()
-	sql := `select * from vpn_mgr where token=?`
+	sql := `select * from network_mgr where token=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return nil, err
@@ -67,14 +67,14 @@ func (vpn *VpnMgr) QueryByToken(token string) (l *VpnMgr, e error) {
 	if err != nil {
 		return nil, err
 	}
-	var result = make([]VpnMgr, 0)
+	var result = make([]NetworkMgr, 0)
 	for rows.Next() {
 		var token, bindIp string
 		var id int64
 		var state int
 		var createTime, updateTime time.Time
 		rows.Scan(&id, &token, &state, &bindIp, &createTime, &updateTime)
-		result = append(result, VpnMgr{id, token, state, bindIp, createTime, updateTime})
+		result = append(result, NetworkMgr{id, token, state, bindIp, createTime, updateTime})
 	}
 	if len(result) == 0 {
 		return nil, errors.New("fail to find such item")
@@ -82,9 +82,9 @@ func (vpn *VpnMgr) QueryByToken(token string) (l *VpnMgr, e error) {
 	return &result[0], nil
 }
 
-func (vpn *VpnMgr) QueryByIp(ip string) (l *VpnMgr, e error) {
+func (network *NetworkMgr) QueryByIp(ip string) (l *NetworkMgr, e error) {
 	db = GetDb()
-	sql := `select * from vpn_mgr where bind_ip=?`
+	sql := `select * from network_mgr where bind_ip=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return nil, err
@@ -93,14 +93,14 @@ func (vpn *VpnMgr) QueryByIp(ip string) (l *VpnMgr, e error) {
 	if err != nil {
 		return nil, err
 	}
-	var result = make([]VpnMgr, 0)
+	var result = make([]NetworkMgr, 0)
 	for rows.Next() {
 		var token, bindIp string
 		var id int64
 		var state int
 		var createTime, updateTime time.Time
 		rows.Scan(&id, &token, &state, &bindIp, &createTime, &updateTime)
-		result = append(result, VpnMgr{id, token, state, bindIp, createTime, updateTime})
+		result = append(result, NetworkMgr{id, token, state, bindIp, createTime, updateTime})
 	}
 	if len(result) == 0 {
 		return nil, errors.New("fail to find such item")
@@ -108,10 +108,10 @@ func (vpn *VpnMgr) QueryByIp(ip string) (l *VpnMgr, e error) {
 	return &result[0], nil
 }
 
-func (vpn *VpnMgr) QueryLogestIdle() (l *VpnMgr, e error) {
+func (network *NetworkMgr) QueryLogestIdle() (l *NetworkMgr, e error) {
 	db = GetDb()
 	// valid in sqlite
-	sql := `select id,token,state,bind_ip,create_time,update_time,min(update_time) from vpn_mgr where state=-1`
+	sql := `select id,token,state,bind_ip,create_time,update_time,min(update_time) from network_mgr where state=-1`
 
 	stmt, err := db.Prepare(sql)
 	if err != nil {
@@ -121,16 +121,16 @@ func (vpn *VpnMgr) QueryLogestIdle() (l *VpnMgr, e error) {
 	if err != nil {
 		return nil, err
 	}
-	var result = make([]VpnMgr, 0)
+	var result = make([]NetworkMgr, 0)
 	for rows.Next() {
 		var token, bindIp string
 		var id int64
 		var state int
 		var createTime, updateTime, tmp time.Time
 		rows.Scan(&id, &token, &state, &bindIp, &createTime, &updateTime, &tmp)
-		result = append(result, VpnMgr{id, token, state, bindIp, createTime, updateTime})
+		result = append(result, NetworkMgr{id, token, state, bindIp, createTime, updateTime})
 		//rows.Scan(&id, &token, &bindIp, &updateTime)
-		//result = append(result, VpnMgr{
+		//result = append(result, NetworkMgr{
 		//	Id:         id,
 		//	Token:      token,
 		//	BindIp:     bindIp,
@@ -143,9 +143,9 @@ func (vpn *VpnMgr) QueryLogestIdle() (l *VpnMgr, e error) {
 	return &result[0], nil
 }
 
-func (vpn *VpnMgr) UpdateStateByToken(state int, token string) (bool, error) {
+func (network *NetworkMgr) UpdateStateByToken(state int, token string) (bool, error) {
 	db = GetDb()
-	sql := `update vpn_mgr set state=? where token=?`
+	sql := `update network_mgr set state=? where token=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return false, err
@@ -161,9 +161,9 @@ func (vpn *VpnMgr) UpdateStateByToken(state int, token string) (bool, error) {
 	return true, nil
 }
 
-func (vpn *VpnMgr) UpdateIpByToken(ip, token string) (bool, error) {
+func (network *NetworkMgr) UpdateIpByToken(ip, token string) (bool, error) {
 	db = GetDb()
-	sql := `update vpn_mgr set bind_ip=? where token=?`
+	sql := `update network_mgr set bind_ip=? where token=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return false, err
@@ -179,9 +179,9 @@ func (vpn *VpnMgr) UpdateIpByToken(ip, token string) (bool, error) {
 	return true, nil
 }
 
-func (vpn *VpnMgr) DeleteById(id int64) (bool, error) {
+func (network *NetworkMgr) DeleteById(id int64) (bool, error) {
 	db = GetDb()
-	sql := `delete from vpn_mgr where id=?`
+	sql := `delete from network_mgr where id=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return false, err
@@ -197,9 +197,9 @@ func (vpn *VpnMgr) DeleteById(id int64) (bool, error) {
 	return true, nil
 }
 
-func (vpn *VpnMgr) DeleteByToken(token string) (bool, error) {
+func (network *NetworkMgr) DeleteByToken(token string) (bool, error) {
 	db = GetDb()
-	sql := `delete from vpn_mgr where token=?`
+	sql := `delete from network_mgr where token=?`
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return false, err
@@ -215,10 +215,10 @@ func (vpn *VpnMgr) DeleteByToken(token string) (bool, error) {
 	return true, nil
 }
 
-func (vpn *VpnMgr) DeleteUnRegisteredIdle(expire int) (bool, error) {
+func (network *NetworkMgr) DeleteUnRegisteredIdle(expire int) (bool, error) {
 	db = GetDb()
 	// valid in sqlite
-	sql := `delete from vpn_mgr where state=-1 and bind_ip="" and julianday('now','localtime')*1440 -julianday(create_time)*1440>? and token!="reserverd"`
+	sql := `delete from network_mgr where state=-1 and bind_ip="" and julianday('now','localtime')*1440 -julianday(create_time)*1440>? and token!="reserverd"`
 
 	stmt, err := db.Prepare(sql)
 	if err != nil {

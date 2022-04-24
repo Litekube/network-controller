@@ -15,7 +15,7 @@
  * Author: wanna <wananzjx@163.com>
  *
  */
-package vpn
+package network
 
 import "github.com/Litekube/network-controller/utils"
 

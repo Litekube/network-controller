@@ -8,7 +8,7 @@ import (
 
 const (
 	dbDriverName = "sqlite3"
-	dbName       = "/tmp/litevpn.db"
+	dbName       = "/tmp/litekube-nc.db"
 )
 
 var db *sql.DB
@@ -36,8 +36,8 @@ func InitSqlite() (err error) {
 }
 
 func createTable() error {
-	// create table vpn_mgr
-	sql := `create table if not exists "vpn_mgr" (
+	// create table network_mgr
+	sql := `create table if not exists "network_mgr" (
 		"id" integer primary key autoincrement,
 		"token" text not null unique,
 		"state" integer not null,
@@ -52,9 +52,9 @@ func createTable() error {
 	}
 	// trigger for update_time
 	sql = `
-	CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_ip,create_time ON vpn_mgr
+	CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_ip,create_time ON network_mgr
 	BEGIN
-	  UPDATE vpn_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
+	  UPDATE network_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
 	END
 	`
 	_, err = db.Exec(sql)

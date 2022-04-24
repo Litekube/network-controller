@@ -5,7 +5,7 @@ package pb;
 option go_package = "./pb_gen;pb_gen";
 
 //RPC接口
-service LiteKubeVpnService {
+service LiteKubeNCService {
   rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
   rpc GetBootStrapToken(GetBootStrapTokenRequest) returns (GetBootStrapTokenResponse) {}
   rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
@@ -42,9 +42,9 @@ message GetTokenResponse {
   string GrpcCaCert=4;
   string GrpcClientKey=5;
   string GrpcClientCert=6;
-  string VpnCaCert=7;
-  string VpnClientKey=8;
-  string VpnClientCert=9;
+  string NetworkCaCert=7;
+  string NetworkClientKey=8;
+  string NetworkClientCert=9;
 }
 
 message CheckConnStateRequest {
