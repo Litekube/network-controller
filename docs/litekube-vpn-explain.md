@@ -1,5 +1,12 @@
 # litekube-vpn-explain
 
+* [litekube-vpn-explain](#litekube-vpn-explain)
+   * [vpn C/S交互关系](#vpn-cs交互关系)
+      * [C/S通信](#cs通信)
+      * [虚拟网卡 &amp; 路由](#虚拟网卡--路由)
+   * [Code detail](#code-detail)
+      * [Interface.go](#interfacego)
+
 ## vpn C/S交互关系
 
 ### C/S通信

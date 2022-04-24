@@ -1,6 +1,13 @@
 # litekube-vpn
 A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The litekube-vpn is built on top of Linux's tun/tap device.
 
+* [litekube-vpn](#litekube-vpn)
+   * [Build and Install](#build-and-install)
+   * [Configuration](#configuration)
+      * [Download](#download)
+      * [Network forwarding](#network-forwarding)
+   * [litekube-vpn-explain](#litekube-vpn-explain)
+
 ## Build and Install
 
 Building litekube-vpn needs Go 1.1 or higher.
@@ -61,4 +68,4 @@ if you want to know more about this project, please look at :
 - [litekube-vpn Principle Explaination doc](docs/litekube-vpn-explain.md)
 - [API Reference doc](docs/API-explain.md)
 - [PRD & System Design doc](docs/design-explain.md)
-- [Usage Demo doc](docs/usage-demo.md)
+- [Usage Demo & doc](https://github.com/WANNA959/litekube-vpn-usage)
