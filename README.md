@@ -1,20 +1,20 @@
-# litekube-vpn
-A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The litekube-vpn is built on top of Linux's tun/tap device.
+# network-controller
+A VPN implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The network-controller is built on top of Linux's tun/tap device.
 
-* [litekube-vpn](#litekube-vpn)
+* [network-controller](#network-controller)
    * [Build and Install](#build-and-install)
    * [Configuration](#configuration)
       * [Download](#download)
       * [Network forwarding](#network-forwarding)
-   * [litekube-vpn-explain](#litekube-vpn-explain)
+   * [network-controller-explain](#network-controller-explain)
 
 ## Build and Install
 
-Building litekube-vpn needs Go 1.1 or higher.
+Building network-controller needs Go 1.1 or higher.
 
 ```shell
 go mod tidy
-go build -o litekube-vpn main.go
+go build -o network-controller main.go
 ```
 
 ## Configuration
@@ -24,13 +24,13 @@ There are two config files to distinguish between client and server.
 To start server execute the following command:
 
 ```shell
-litekube-vpn --config server.yml
+network-controller --config server.yml
 ```
 
 client:
 
 ```shell
-litekube-vpn --config client.yml
+network-controller --config client.yml
 ```
 
 ### Download
@@ -61,11 +61,11 @@ iptables -A FORWARD -i eth0 -o tun0 -j ACCEPT
 iptables -A FORWARD -i tun0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 ```
 
-## litekube-vpn-explain
+## network-controller-explain
 
 if you want to know more about this project, please look at :
 
-- [litekube-vpn Principle Explaination doc](docs/litekube-vpn-explain.md)
+- [network-controller Principle Explaination doc](docs/network-controller-explain.md)
 - [API Reference doc](docs/API-explain.md)
 - [PRD & System Design doc](docs/design-explain.md)
-- [Usage Demo & doc](https://github.com/WANNA959/litekube-vpn-usage)
+- [Usage Demo & doc](https://github.com/WANNA959/network-controller-usage)

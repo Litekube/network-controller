@@ -1,4 +1,4 @@
-module github.com/Litekube/litekube-vpn
+module github.com/Litekube/network-controller
 
 go 1.17
 

@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"github.com/Litekube/litekube-vpn/certs"
-	"github.com/Litekube/litekube-vpn/config"
-	"github.com/Litekube/litekube-vpn/contant"
-	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
-	"github.com/Litekube/litekube-vpn/sqlite"
-	"github.com/Litekube/litekube-vpn/utils"
+	"github.com/Litekube/network-controller/certs"
+	"github.com/Litekube/network-controller/config"
+	"github.com/Litekube/network-controller/contant"
+	"github.com/Litekube/network-controller/grpc/pb_gen"
+	"github.com/Litekube/network-controller/sqlite"
+	"github.com/Litekube/network-controller/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
 )
 
@@ -163,7 +163,7 @@ func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetToke
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
 
-	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, "litekube-vpn-grpc-client", []string{"litekube-vpn-grpc"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err := certs.GenerateClientCertKey(true, "network-controller-grpc-client", []string{"network-controller-grpc"}, service.grpcTlsConfig.CAFile, service.grpcTlsConfig.CAKeyFile, service.grpcTlsConfig.ClientCertFile, service.grpcTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}
@@ -179,7 +179,7 @@ func (service *LiteVpnService) GetToken(ctx context.Context, req *pb_gen.GetToke
 	resp.GrpcClientKey = base64.StdEncoding.EncodeToString(keyBytes)
 	resp.GrpcClientCert = base64.StdEncoding.EncodeToString(certBytes)
 
-	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "litekube-vpn-client", []string{"litekube-vpn"}, service.vpnTlsConfig.CAFile, service.vpnTlsConfig.CAKeyFile, service.vpnTlsConfig.ClientCertFile, service.vpnTlsConfig.ClientKeyFile)
+	keyBytes, certBytes, _, err = certs.GenerateClientCertKey(true, "network-controller-client", []string{"network-controller"}, service.vpnTlsConfig.CAFile, service.vpnTlsConfig.CAKeyFile, service.vpnTlsConfig.ClientCertFile, service.vpnTlsConfig.ClientKeyFile)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
 	}

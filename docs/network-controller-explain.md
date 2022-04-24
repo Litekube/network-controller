@@ -1,6 +1,6 @@
-# litekube-vpn-explain
+# network-controller-explain
 
-* [litekube-vpn-explain](#litekube-vpn-explain)
+* [network-controller-explain](#network-controller-explain)
    * [vpn C/S交互关系](#vpn-cs交互关系)
       * [C/S通信](#cs通信)
       * [虚拟网卡 &amp; 路由](#虚拟网卡--路由)

@@ -2,7 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
-	"github.com/Litekube/litekube-vpn/utils"
+	"github.com/Litekube/network-controller/utils"
 	_ "github.com/mattn/go-sqlite3"
 )
 

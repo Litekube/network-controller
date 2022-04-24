@@ -20,12 +20,12 @@ package vpn
 
 import (
 	"fmt"
-	"github.com/Litekube/litekube-vpn/certs"
-	"github.com/Litekube/litekube-vpn/config"
-	"github.com/Litekube/litekube-vpn/contant"
-	"github.com/Litekube/litekube-vpn/grpc/grpc_server"
-	"github.com/Litekube/litekube-vpn/sqlite"
-	"github.com/Litekube/litekube-vpn/utils"
+	"github.com/Litekube/network-controller/certs"
+	"github.com/Litekube/network-controller/config"
+	"github.com/Litekube/network-controller/contant"
+	"github.com/Litekube/network-controller/grpc/grpc_server"
+	"github.com/Litekube/network-controller/sqlite"
+	"github.com/Litekube/network-controller/utils"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/songgao/water"

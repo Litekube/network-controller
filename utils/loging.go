@@ -33,7 +33,7 @@ func GetLogger() *logging.Logger {
 }
 
 func InitLogger() {
-	logger = logging.MustGetLogger("litekube-vpn")
+	logger = logging.MustGetLogger("network-controller")
 	fmt_string := "\r%{color}[%{time:06-01-02 15:04:05}][%{shortfile}][%{level:.6s}] %{shortfunc}%{color:reset} %{message}"
 	format := logging.MustStringFormatter(fmt_string)
 	logging.SetFormatter(format)
@@ -42,8 +42,8 @@ func InitLogger() {
 
 func SetLoggerLevel(debug bool) {
 	if debug {
-		logging.SetLevel(logging.DEBUG, "litekube-vpn")
+		logging.SetLevel(logging.DEBUG, "network-controller")
 	} else {
-		logging.SetLevel(logging.INFO, "litekube-vpn")
+		logging.SetLevel(logging.INFO, "network-controller")
 	}
 }

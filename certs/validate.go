@@ -3,7 +3,7 @@ package certs
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/Litekube/litekube-vpn/utils"
+	"github.com/Litekube/network-controller/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
 	"io/ioutil"
 )

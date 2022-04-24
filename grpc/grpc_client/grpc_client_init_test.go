@@ -3,7 +3,7 @@ package grpc_client
 import (
 	"context"
 	"encoding/base64"
-	"github.com/Litekube/litekube-vpn/grpc/pb_gen"
+	"github.com/Litekube/network-controller/grpc/pb_gen"
 	certutil "github.com/rancher/dynamiclistener/cert"
 	"testing"
 	"time"
@@ -14,7 +14,7 @@ func TestGetGrpcClient(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/network-controller/certs/test/",
 		CAFile:      "ca2.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
@@ -34,7 +34,7 @@ func TestGrpcClient_InitGrpcClientConn(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/network-controller/certs/test1/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
@@ -52,9 +52,9 @@ func TestGrpcClient_InitGrpcClientConn(t *testing.T) {
 	caBytes, err := base64.StdEncoding.DecodeString(resp.GrpcCaCert)
 	certBytes, err := base64.StdEncoding.DecodeString(resp.GrpcClientCert)
 	keyBytes, err := base64.StdEncoding.DecodeString(resp.GrpcClientKey)
-	certutil.WriteCert("/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/ca2.pem", caBytes)
-	certutil.WriteCert("/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/client.pem", certBytes)
-	certutil.WriteKey("/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test/client-key.pem", keyBytes)
+	certutil.WriteCert("/Users/zhujianxing/GoLandProjects/network-controller/certs/test/ca2.pem", caBytes)
+	certutil.WriteCert("/Users/zhujianxing/GoLandProjects/network-controller/certs/test/client.pem", certBytes)
+	certutil.WriteKey("/Users/zhujianxing/GoLandProjects/network-controller/certs/test/client-key.pem", keyBytes)
 }
 
 // test server self-gen cert(ca/server/client)
@@ -62,7 +62,7 @@ func TestGrpcClient_InitGrpcClientConn2(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/litekube-vpn/certs/test1/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/network-controller/certs/test1/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",

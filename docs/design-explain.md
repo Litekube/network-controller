@@ -82,5 +82,5 @@ END
 - vpn-server多副本、高可用，支持client端自动切换vpn-server
   - 涉及到数据迁移、“脑裂”问题，后期工作验证合理性、可行性
 
-- （如果需要）litekube-vpn gRPC CLI 工具
+- （如果需要）network-controller gRPC CLI 工具
   - 此处可以使用开源grpcurl工具代替

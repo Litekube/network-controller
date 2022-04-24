@@ -1,7 +1,7 @@
 mode: client
 client:
   # vpn tls cert root dir
-  vpnCertDir: /root/go_project/litekube-vpn/certs/test2/
+  vpnCertDir: /root/go_project/network-controller/certs/test2/
   # vpn server ip
   serverAddr: 101.43.253.110
   # vpn server port

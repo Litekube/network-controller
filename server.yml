@@ -3,11 +3,11 @@ server:
   # vpn server port to listen
   port: 6441
   # vpn tls cert root dir
-  vpnCertDir: /root/go_project/litekube-vpn/certs/test2/
+  vpnCertDir: /root/go_project/network-controller/certs/test2/
   # grpc server port
   grpcPort: 6440
   # grpc tls cert root dir
-  grpcCertDir: /root/go_project/litekube-vpn/certs/test1/
+  grpcCertDir: /root/go_project/network-controller/certs/test1/
   # server addr
   vpnAddr: 10.1.1.1/24
   # MTU
