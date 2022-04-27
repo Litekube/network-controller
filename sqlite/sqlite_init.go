@@ -58,5 +58,29 @@ func createTable() error {
 	END
 	`
 	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	// create bootstrap token mgr
+	sql = `create table if not exists "token_mgr" (
+		"id" integer primary key autoincrement,
+		"token" text not null unique,
+		"expire_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
+		"create_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
+    	"update_time"    timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime'))
+	)`
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	// trigger for update_time
+	sql = `
+	CREATE TRIGGER if not exists update_time_trigger2 UPDATE OF id,token,create_time,expire_time ON token_mgr
+	BEGIN
+	  UPDATE token_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
+	END
+	`
+
 	return err
 }

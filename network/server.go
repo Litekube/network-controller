@@ -275,6 +275,11 @@ func (server *NetworkServer) cleanUp() {
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
 	logger.Debug("clean up")
+
+	// update all connected state in sqlite
+	nm := sqlite.NetworkMgr{}
+	nm.UpdateAllState()
+
 	// close all client connection
 	for key, client := range server.clients {
 		client.ws.Close()
@@ -329,8 +334,8 @@ func (server *NetworkServer) handleGrpcUnRegister() error {
 			tag, _ := strconv.Atoi(strings.Split(ip, ".")[3])
 			server.ippool.releaseByTag(tag)
 		case <-server.idleCheckTimer.C:
-			nm := sqlite.NetworkMgr{}
-			nm.DeleteUnRegisteredIdle(contant.IdleTokenExpireDuration)
+			tm := sqlite.TokenMgr{}
+			tm.DeleteExpireToken()
 		}
 	}
 }

@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"os"
+	"syscall"
 )
 
 // only all files exist return true, other return false
@@ -27,4 +29,25 @@ func CreateDir(path string) {
 	if !Exists(path) {
 		os.MkdirAll(path, os.ModePerm)
 	}
+}
+
+func Pwd() (string, error) {
+	return os.Getwd()
+}
+
+func LockFile(path string) (*os.File, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) // 加上排他锁，当遇到文件加锁的情况直接返回 Error
+	if err != nil {
+		return nil, fmt.Errorf("cannot flock file %s: %s", path, err)
+	}
+	return f, nil
+}
+
+func UnlockFile(file *os.File) error {
+	defer file.Close()
+	return syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 }

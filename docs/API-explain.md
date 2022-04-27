@@ -4,6 +4,7 @@
   * [概述](#概述)
   * [grpcurl工具](#grpcurl工具)
   * [接口列表](#接口列表)
+       * [Bootstrap注册 GetBootStrapToken](#bootstrap注册-getbootstraptoken)
        * [节点注册 GetToken](#节点注册-gettoken)
        * [节点取消注册 UnRegister](#节点取消注册-unregister)
        * [检查连接状态 CheckConnState](#检查连接状态-checkconnstate)
@@ -15,7 +16,6 @@
 
 ```
 service LiteKubeNCService {
-  rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
   rpc GetBootStrapToken(GetBootStrapTokenRequest) returns (GetBootStrapTokenResponse) {}
   rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
   rpc CheckConnState(CheckConnStateRequest) returns (CheckConnResponse){}
@@ -73,7 +73,10 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.Lit
 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
 
-grpcurl -d '{}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+
+grpcurl -d '{"expireTime": 10}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
+
 ```
 
 - support tls
@@ -86,20 +89,52 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key 
 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
 
-grpcurl -d '{}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+
+grpcurl -d '{"expireTime": 5}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
 
 ### 接口列表
+
+#### Bootstrap注册 GetBootStrapToken
+
+- demo：获取一个过期时间为10min的Bootstrap token
+
+```shell
+grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
+```
+
+- GetBootStrapTokenRequest参数
+
+| **参数**   | 类型  | 含义     | 是否必须 | demo |
+| ---------- | ----- | -------- | -------- | ---- |
+| expireTime | int32 | 过期时间 | 否       | 10   |
+
+- GetBootStrapTokenResponse返回数据
+
+```json
+{
+  "code": "200",
+  "message": "ok",
+  "bootStrapToken": "deac5f329feb4729",
+  "cloudIp": "101.43.253.110",
+  "port": "6440"
+}
+```
 
 #### 节点注册 GetToken
 
 - demo：节点注册node-token
 
 ```shell
-grpcurl -d '{}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
 ```
 
-- GetTokenRequest参数：空参
+- GetTokenRequest参数
+
+| **参数**       | 类型   | 含义            | 是否必须 | demo             |
+| -------------- | ------ | --------------- | -------- | ---------------- |
+| bootStrapToken | string | bootstrap token | 是       | deac5f329feb4729 |
 
 - GetTokenResponse返回数据（证书字段均为base64编码）
 
@@ -119,7 +154,7 @@ grpcurl -d '{}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.1
 
 #### 节点取消注册 UnRegister
 
-- demo：获取node-token为b52f93d3f0ec4be7的连接状态
+- demo：取消node-token为b52f93d3f0ec4be7的注册绑定
 
 ```shell
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState

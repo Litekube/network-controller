@@ -11,22 +11,62 @@ import (
 	"github.com/Litekube/network-controller/sqlite"
 	"github.com/Litekube/network-controller/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
+	"time"
 )
 
 type NetworkControllerService struct {
 	unRegisterCh     chan string
 	grpcTlsConfig    config.TLSConfig
 	networkTlsConfig config.TLSConfig
+	ip               string
+	port             string
 }
 
 var logger = utils.GetLogger()
 
-func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig) *NetworkControllerService {
+func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, port string) *NetworkControllerService {
 	return &NetworkControllerService{
 		unRegisterCh:     unRegisterCh,
 		grpcTlsConfig:    grpcTlsConfig,
 		networkTlsConfig: networkTlsConfig,
+		ip:               ip,
+		port:             port,
 	}
+}
+
+func (service *NetworkControllerService) GetBootStrapToken(ctx context.Context, req *pb_gen.GetBootStrapTokenRequest) (*pb_gen.GetBootStrapTokenResponse, error) {
+
+	wrappedResp := func(code, message, token string) (resp *pb_gen.GetBootStrapTokenResponse, err error) {
+		if code != contant.STATUS_OK {
+			err = errors.New(message)
+		}
+		resp = &pb_gen.GetBootStrapTokenResponse{
+			Code:           code,
+			Message:        message,
+			BootStrapToken: token,
+			CloudIp:        service.ip,
+			Port:           service.port,
+		}
+		logger.Debugf("resp: %+v", resp)
+		return
+	}
+
+	if req.ExpireTime == 0 {
+		req.ExpireTime = contant.IdleTokenExpireDuration
+	}
+	token := utils.GetUniqueToken()
+	tm := sqlite.TokenMgr{}
+	// no need
+	//item, err := nm.QueryByToken(token)
+	err := tm.Insert(sqlite.TokenMgr{
+		Token:      token,
+		ExpireTime: time.Now().Add(time.Duration(req.ExpireTime) * time.Minute),
+	}, req.ExpireTime)
+	if err != nil {
+		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
+	}
+
+	return wrappedResp(contant.STATUS_OK, contant.MESSAGE_OK, token)
 }
 
 func (service *NetworkControllerService) CheckConnState(ctx context.Context, req *pb_gen.CheckConnStateRequest) (*pb_gen.CheckConnResponse, error) {
@@ -150,11 +190,23 @@ func (service *NetworkControllerService) GetToken(ctx context.Context, req *pb_g
 		return
 	}
 
+	if len(req.BootStrapToken) == 0 {
+		return wrappedResp(contant.STATUS_BADREQUEST, "bootstrap token can't be empty", "")
+	}
+
+	tm := sqlite.TokenMgr{}
+	item, err := tm.QueryByToken(req.BootStrapToken)
+	if item == nil {
+		return wrappedResp(contant.STATUS_OK, err.Error(), "")
+	} else if err != nil {
+		return wrappedResp(contant.STATUS_ERR, err.Error(), "")
+	}
+
 	token := utils.GetUniqueToken()
 	nm := sqlite.NetworkMgr{}
 	// no need
 	//item, err := nm.QueryByToken(token)
-	err := nm.Insert(sqlite.NetworkMgr{
+	err = nm.Insert(sqlite.NetworkMgr{
 		Token:  token,
 		State:  contant.STATE_IDLE,
 		BindIp: "",

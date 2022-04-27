@@ -179,6 +179,25 @@ func (network *NetworkMgr) UpdateIpByToken(ip, token string) (bool, error) {
 	return true, nil
 }
 
+func (network *NetworkMgr) UpdateAllState() (bool, error) {
+	db = GetDb()
+	// add state!=-1 for no change update_time
+	sql := `update network_mgr set state=-1 where state!=-1`
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return false, err
+	}
+	res, err := stmt.Exec()
+	if err != nil {
+		return false, err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (network *NetworkMgr) DeleteById(id int64) (bool, error) {
 	db = GetDb()
 	sql := `delete from network_mgr where id=?`

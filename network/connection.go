@@ -68,7 +68,11 @@ func NewConnection(ws *websocket.Conn, server *NetworkServer, token string) (*co
 	if item == nil {
 		return nil, errors.New(fmt.Sprintf("invalid token %+v", token))
 	}
-	if item != nil && len(item.BindIp) != 0 {
+	//item != nil
+	if item.State != contant.STATE_IDLE {
+		return nil, errors.New(fmt.Sprintf("token %+v already connected", token))
+	}
+	if len(item.BindIp) != 0 {
 		bindIp = item.BindIp
 	}
 	// auto inc

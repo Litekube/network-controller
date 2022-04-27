@@ -13,7 +13,7 @@
 sqlite3 /tmp/litekube-nc.db
 ```
 
-- sqlite表network_mgr结构设计
+- sqlite表network_mgr、token_mgr结构设计
 
 ```sql
 create table if not exists "network_mgr" (
@@ -21,6 +21,15 @@ create table if not exists "network_mgr" (
 		"token" text not null unique,
 		"state" integer not null,
 		"bind_ip" text not null default "",
+		"create_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
+    "update_time"    timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime'))
+)
+
+// for bootstrap token
+create table if not exists "token_mgr" (
+		"id" integer primary key autoincrement,
+		"token" text not null unique,
+		"expire_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
 		"create_time" timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime')),
     "update_time"    timestamp default (datetime(CURRENT_TIMESTAMP, 'localtime'))
 )
@@ -34,6 +43,11 @@ CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_i
 BEGIN
 	UPDATE network_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
 END
+
+CREATE TRIGGER if not exists update_time_trigger2 UPDATE OF id,token,create_time,expire_time ON token_mgr
+BEGIN
+  UPDATE token_mgr SET update_time=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE id=OLD.id;
+END
 ```
 
 ### 应用层功能增强
@@ -41,13 +55,15 @@ END
 - 控制面板基于tcp gRPC+protobuf实现通信交互服务
   - 安全通信，支持tls
 - 分离grpc和network两套证书
-
 - 获取本机已连接的network ip（连接过且未取消注册的）
 - 可通过设置摧毁网络，主机自动DHCP到全新的ip，后续重连ip依旧与主机绑定，任意一台服务器，重连以后具有稳定的ip 
-  - network manager端生成unique token并和组网ip绑定
+  - 信任节点申请bootstrap token后，新注册的node需要携带该bootstrap token注册
+    - bootstrap token的具有时效性，用户可以指定过期时间（单位为min），默认10min内
+      - goroutine每隔10min检查过期token，并删除
+  - 新注册的node需要携带bootstrap token注册
     - server端统一认证
-    - token的具有时效性，默认10min内
-      - goroutine每隔1min检查过期token，并删除
+      - 检查bootstrap token的合法性后，network manager端生成unique token并和组网ip绑定
+      - 返回node-token以及grpc+network两套证书
   - 此处的问题在于，需要保留ip，可能存在ip不足的问题，采用LRU策略，根据update_time删除最久没使用的ip
     - ippool相当于cache，和sqlite数据保持同步
       - server启动开启cache同步协程，将sqlite持久化数据映射到cache中
@@ -72,7 +88,7 @@ END
 
 - 日志向上对齐，logging改为klog
 - 多网段
-  - 可配置的，通过grpc请求动态增加网段
+  - 可预先配置的+可通过grpc请求动态增加网段
   
   - 节点携带node-token和net-token表明节点身份和期待加入的网络
     - 具有不同的net-token的网络互不干扰

@@ -16,6 +16,7 @@ import (
 	"log"
 	"net"
 	"path/filepath"
+	"strconv"
 )
 
 type GrpcServer struct {
@@ -51,7 +52,11 @@ func newGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
 		},
 	}
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig)
+	ip := utils.QueryPublicIp()
+	if ip == "" {
+		ip = cfg.Ip
+	}
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.GrpcPort))
 	return s
 }
 

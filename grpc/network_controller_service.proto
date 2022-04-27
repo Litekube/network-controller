@@ -23,12 +23,15 @@ message HelloWorldResponse {
 }
 
 message GetBootStrapTokenRequest {
+  int32 expireTime=1;
 }
 
 message GetBootStrapTokenResponse {
   string code = 1;
   string message = 2;
-  string boorStrapToken = 3;
+  string bootStrapToken = 3;
+  string cloudIp=4;
+  string port=5;
 }
 
 message GetTokenRequest {
