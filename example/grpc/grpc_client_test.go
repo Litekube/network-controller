@@ -17,8 +17,8 @@ func TestGetBootstrapToken(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	Init()
-	tokenResp, err := GetToken("37714d21914a423f")
+	Init2()
+	tokenResp, err := GetToken("70318e4cb8dd4100")
 	if err != nil {
 		logger.Errorf("fail to call GetToken err: %+v", err)
 		return
@@ -44,7 +44,7 @@ func TestGetToken(t *testing.T) {
 
 func TestCheckConnState(t *testing.T) {
 	Init()
-	checkResp, err := CheckConnState("a9f683a2d05b4957")
+	checkResp, err := CheckConnState("e95b4398c1514a24")
 	if err != nil {
 		logger.Errorf("fail to call CheckConnState err: %+v", err)
 		return
@@ -54,7 +54,7 @@ func TestCheckConnState(t *testing.T) {
 
 func TestUnRegister(t *testing.T) {
 	Init()
-	unRegisResp, err := UnRegister("a9f683a2d05b4957")
+	unRegisResp, err := UnRegister("e95b4398c1514a24")
 	if err != nil {
 		logger.Errorf("fail to call UnRegister err: %+v", err)
 		return

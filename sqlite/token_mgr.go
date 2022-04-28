@@ -16,7 +16,12 @@ type TokenMgr struct {
 
 func (tm *TokenMgr) Insert(t TokenMgr, expireTime int32) error {
 	db = GetDb()
-	sql := fmt.Sprintf(`insert into token_mgr (token,expire_time) values(?,datetime(CURRENT_TIMESTAMP, 'localtime','+%d minute'))`, expireTime)
+	var sql string
+	if expireTime < 0 {
+		sql = fmt.Sprintf(`insert into token_mgr (token,expire_time) values(?,-1)`)
+	} else {
+		sql = fmt.Sprintf(`insert into token_mgr (token,expire_time) values(?,datetime(CURRENT_TIMESTAMP, 'localtime','+%d minute'))`, expireTime)
+	}
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return err
@@ -53,7 +58,7 @@ func (tm *TokenMgr) QueryByToken(token string) (l *TokenMgr, e error) {
 func (tm *TokenMgr) DeleteExpireToken() (bool, error) {
 	db = GetDb()
 	// valid in sqlite
-	sql := `delete from token_mgr where julianday('now','localtime')*1440 >julianday(expire_time)*1440`
+	sql := `delete from token_mgr where julianday('now','localtime')*1440 >julianday(expire_time)*1440 and expire_time!=-1`
 
 	stmt, err := db.Prepare(sql)
 	if err != nil {

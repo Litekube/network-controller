@@ -9,18 +9,27 @@ import (
 
 var logger = utils.GetLogger()
 
-var client *grpc_client.GrpcClient
+var Client *grpc_client.GrpcClient
 
 func Init() {
-	client = &grpc_client.GrpcClient{
+	Client = &grpc_client.GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		GrpcCertDir: "/root/go_project/network-controller-usage/certs/test/",
+		GrpcCertDir: "/root/go_project/network-controller-usage/certs/test1/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
 	}
-	err := client.InitGrpcClientConn()
+	err := Client.InitGrpcClientConn()
+	logger.Info(err)
+}
+
+func Init2() {
+	Client = &grpc_client.GrpcClient{
+		Ip:   "101.43.253.110",
+		Port: "6440",
+	}
+	err := Client.InitGrpcClientConn()
 	logger.Info(err)
 }
 
@@ -33,7 +42,7 @@ func GetBootstrapToken() (*pb_gen.GetBootStrapTokenResponse, error) {
 		ExpireTime: 3,
 	}
 
-	resp, err := client.C.GetBootStrapToken(context.Background(), req)
+	resp, err := Client.C.GetBootStrapToken(context.Background(), req)
 	logger.Info(resp)
 	logger.Info(err)
 
@@ -45,7 +54,7 @@ func GetToken(bootstrapToken string) (*pb_gen.GetTokenResponse, error) {
 		BootStrapToken: bootstrapToken,
 	}
 
-	resp, err := client.C.GetToken(context.Background(), req)
+	resp, err := Client.C.GetToken(context.Background(), req)
 	logger.Info(resp)
 	logger.Info(err)
 
@@ -57,7 +66,7 @@ func CheckConnState(token string) (*pb_gen.CheckConnResponse, error) {
 		Token: token,
 	}
 
-	resp, err := client.C.CheckConnState(context.Background(), req)
+	resp, err := Client.C.CheckConnState(context.Background(), req)
 	logger.Info(resp)
 	logger.Info(err)
 	return resp, err
@@ -68,7 +77,7 @@ func UnRegister(token string) (*pb_gen.UnRegisterResponse, error) {
 		Token: token,
 	}
 
-	resp, err := client.C.UnRegister(context.Background(), req)
+	resp, err := Client.C.UnRegister(context.Background(), req)
 	logger.Info(resp)
 	logger.Info(err)
 	return resp, err

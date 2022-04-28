@@ -35,29 +35,34 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 	address = fmt.Sprintf("%s:%s", c.Ip, c.Port)
 
 	var dialOpt []grpc.DialOption
-	cert, err := tls.LoadX509KeyPair(filepath.Join(c.GrpcCertDir, c.CertFile), filepath.Join(c.GrpcCertDir, c.KeyFile))
-	if err != nil {
-		logger.Errorf("tls.LoadX509KeyPair err: %v", err)
-		return err
-	}
+	var creds credentials.TransportCredentials
+	if c.GrpcCertDir != "" && c.CertFile != "" && c.KeyFile != "" && c.CAFile != "" {
+		cert, err := tls.LoadX509KeyPair(filepath.Join(c.GrpcCertDir, c.CertFile), filepath.Join(c.GrpcCertDir, c.KeyFile))
+		if err != nil {
+			logger.Errorf("tls.LoadX509KeyPair err: %v", err)
+			return err
+		}
 
-	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile(filepath.Join(c.GrpcCertDir, c.CAFile))
-	if err != nil {
-		logger.Errorf("ioutil.ReadFile err: %v", err)
-		return err
+		certPool := x509.NewCertPool()
+		ca, err := ioutil.ReadFile(filepath.Join(c.GrpcCertDir, c.CAFile))
+		if err != nil {
+			logger.Errorf("ioutil.ReadFile err: %v", err)
+			return err
+		}
+		if ok := certPool.AppendCertsFromPEM(ca); !ok {
+			logger.Errorf("certPool.AppendCertsFromPEM err")
+			return err
+		}
+		creds = credentials.NewTLS(&tls.Config{
+			Certificates: []tls.Certificate{cert},
+			ServerName:   c.Ip,
+			RootCAs:      certPool,
+		})
+	} else {
+		creds = credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})
 	}
-
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		logger.Errorf("certPool.AppendCertsFromPEM err")
-		return err
-	}
-	//logger.Info(cert)
-	creds := credentials.NewTLS(&tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ServerName:   c.Ip,
-		RootCAs:      certPool,
-	})
 	dialOpt = append(dialOpt, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 
 	conn, err := grpc.Dial(address, dialOpt...)

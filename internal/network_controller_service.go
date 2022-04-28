@@ -11,7 +11,6 @@ import (
 	"github.com/Litekube/network-controller/sqlite"
 	"github.com/Litekube/network-controller/utils"
 	certutil "github.com/rancher/dynamiclistener/cert"
-	"time"
 )
 
 type NetworkControllerService struct {
@@ -59,8 +58,8 @@ func (service *NetworkControllerService) GetBootStrapToken(ctx context.Context, 
 	// no need
 	//item, err := nm.QueryByToken(token)
 	err := tm.Insert(sqlite.TokenMgr{
-		Token:      token,
-		ExpireTime: time.Now().Add(time.Duration(req.ExpireTime) * time.Minute),
+		Token: token,
+		//ExpireTime: time.Now().Add(time.Duration(req.ExpireTime) * time.Minute),
 	}, req.ExpireTime)
 	if err != nil {
 		return wrappedResp(contant.STATUS_ERR, err.Error(), "")

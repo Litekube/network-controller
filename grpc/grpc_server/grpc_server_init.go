@@ -144,10 +144,8 @@ func TokenInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServ
 		return nil, status.Errorf(codes.Unauthenticated, "no metadata")
 	}
 
-	if strings.Contains(info.FullMethod, "/GetBootStrapToken") {
+	if strings.Contains(info.FullMethod, "/GetToken") {
 		// bootstrap, handle directly
-		return handler(ctx, req)
-	} else if strings.Contains(info.FullMethod, "/GetToken") {
 		// check bootstrap token
 		if _, ok := md["bootstrap-token"]; !ok {
 			return nil, status.Errorf(codes.Aborted, "plz provide bootstrap-token")
