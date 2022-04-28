@@ -8,6 +8,8 @@ server:
   networkCertDir: /root/go_project/network-controller/certs/test2/
   # grpc server port
   grpcPort: 6440
+  # grpc bootstrap port
+  bootstrapPort: 6439
   # grpc tls cert root dir
   grpcCertDir: /root/go_project/network-controller/certs/test1/
   # server addr

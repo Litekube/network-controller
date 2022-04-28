@@ -105,7 +105,9 @@ func (server *NetworkServer) Run() error {
 
 	unRegisterCh := make(chan string, 8)
 	networkServer.unRegisterCh = unRegisterCh
-	go grpc_server.StartGrpcServer(server.cfg, unRegisterCh)
+	gServer := grpc_server.NewGrpcServer(server.cfg, unRegisterCh)
+	go gServer.StartGrpcServerTcp()
+	go gServer.StartBootstrapServerTcp()
 
 	//utils.CreateDir(server.cfg.NetworkCertDir)
 	//err := certs.CheckNetworkCertConfig(networkServer.networkTLSConfig)

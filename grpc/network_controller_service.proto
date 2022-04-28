@@ -8,10 +8,13 @@ option go_package = "./pb_gen;pb_gen";
 service LiteKubeNCService {
   rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
   rpc GetBootStrapToken(GetBootStrapTokenRequest) returns (GetBootStrapTokenResponse) {}
-  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
   rpc CheckConnState(CheckConnStateRequest) returns (CheckConnResponse){}
   rpc UnRegister(UnRegisterRequest) returns (UnRegisterResponse){}
   rpc GetRegistedIp(GetRegistedIpRequest) returns (GetRegistedIpResponse){}
+}
+
+service LiteKubeNCBootstrapService {
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
 }
 
 message HelloWorldRequest {

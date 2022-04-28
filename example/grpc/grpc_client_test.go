@@ -17,8 +17,8 @@ func TestGetBootstrapToken(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	Init2()
-	tokenResp, err := GetToken("70318e4cb8dd4100")
+	InitBootstrapClient()
+	tokenResp, err := GetToken("5bdabb7c3a3e4bd9")
 	if err != nil {
 		logger.Errorf("fail to call GetToken err: %+v", err)
 		return
@@ -44,7 +44,7 @@ func TestGetToken(t *testing.T) {
 
 func TestCheckConnState(t *testing.T) {
 	Init()
-	checkResp, err := CheckConnState("e95b4398c1514a24")
+	checkResp, err := CheckConnState("009794b89caa4881")
 	if err != nil {
 		logger.Errorf("fail to call CheckConnState err: %+v", err)
 		return

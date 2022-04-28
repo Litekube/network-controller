@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type LiteKubeNCServiceClient interface {
 	HelloWorld(ctx context.Context, in *HelloWorldRequest, opts ...grpc.CallOption) (*HelloWorldResponse, error)
 	GetBootStrapToken(ctx context.Context, in *GetBootStrapTokenRequest, opts ...grpc.CallOption) (*GetBootStrapTokenResponse, error)
-	GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error)
 	CheckConnState(ctx context.Context, in *CheckConnStateRequest, opts ...grpc.CallOption) (*CheckConnResponse, error)
 	UnRegister(ctx context.Context, in *UnRegisterRequest, opts ...grpc.CallOption) (*UnRegisterResponse, error)
 	GetRegistedIp(ctx context.Context, in *GetRegistedIpRequest, opts ...grpc.CallOption) (*GetRegistedIpResponse, error)
@@ -50,15 +49,6 @@ func (c *liteKubeNCServiceClient) HelloWorld(ctx context.Context, in *HelloWorld
 func (c *liteKubeNCServiceClient) GetBootStrapToken(ctx context.Context, in *GetBootStrapTokenRequest, opts ...grpc.CallOption) (*GetBootStrapTokenResponse, error) {
 	out := new(GetBootStrapTokenResponse)
 	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCService/GetBootStrapToken", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *liteKubeNCServiceClient) GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error) {
-	out := new(GetTokenResponse)
-	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCService/GetToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +88,6 @@ func (c *liteKubeNCServiceClient) GetRegistedIp(ctx context.Context, in *GetRegi
 type LiteKubeNCServiceServer interface {
 	HelloWorld(context.Context, *HelloWorldRequest) (*HelloWorldResponse, error)
 	GetBootStrapToken(context.Context, *GetBootStrapTokenRequest) (*GetBootStrapTokenResponse, error)
-	GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error)
 	CheckConnState(context.Context, *CheckConnStateRequest) (*CheckConnResponse, error)
 	UnRegister(context.Context, *UnRegisterRequest) (*UnRegisterResponse, error)
 	GetRegistedIp(context.Context, *GetRegistedIpRequest) (*GetRegistedIpResponse, error)
@@ -114,9 +103,6 @@ func (UnimplementedLiteKubeNCServiceServer) HelloWorld(context.Context, *HelloWo
 }
 func (UnimplementedLiteKubeNCServiceServer) GetBootStrapToken(context.Context, *GetBootStrapTokenRequest) (*GetBootStrapTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBootStrapToken not implemented")
-}
-func (UnimplementedLiteKubeNCServiceServer) GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetToken not implemented")
 }
 func (UnimplementedLiteKubeNCServiceServer) CheckConnState(context.Context, *CheckConnStateRequest) (*CheckConnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckConnState not implemented")
@@ -172,24 +158,6 @@ func _LiteKubeNCService_GetBootStrapToken_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LiteKubeNCServiceServer).GetBootStrapToken(ctx, req.(*GetBootStrapTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _LiteKubeNCService_GetToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LiteKubeNCServiceServer).GetToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.LiteKubeNCService/GetToken",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LiteKubeNCServiceServer).GetToken(ctx, req.(*GetTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -264,10 +232,6 @@ var LiteKubeNCService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _LiteKubeNCService_GetBootStrapToken_Handler,
 		},
 		{
-			MethodName: "GetToken",
-			Handler:    _LiteKubeNCService_GetToken_Handler,
-		},
-		{
 			MethodName: "CheckConnState",
 			Handler:    _LiteKubeNCService_CheckConnState_Handler,
 		},
@@ -278,6 +242,93 @@ var LiteKubeNCService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRegistedIp",
 			Handler:    _LiteKubeNCService_GetRegistedIp_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "network_controller_service.proto",
+}
+
+// LiteKubeNCBootstrapServiceClient is the client API for LiteKubeNCBootstrapService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type LiteKubeNCBootstrapServiceClient interface {
+	GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error)
+}
+
+type liteKubeNCBootstrapServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewLiteKubeNCBootstrapServiceClient(cc grpc.ClientConnInterface) LiteKubeNCBootstrapServiceClient {
+	return &liteKubeNCBootstrapServiceClient{cc}
+}
+
+func (c *liteKubeNCBootstrapServiceClient) GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error) {
+	out := new(GetTokenResponse)
+	err := c.cc.Invoke(ctx, "/pb.LiteKubeNCBootstrapService/GetToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// LiteKubeNCBootstrapServiceServer is the server API for LiteKubeNCBootstrapService service.
+// All implementations must embed UnimplementedLiteKubeNCBootstrapServiceServer
+// for forward compatibility
+type LiteKubeNCBootstrapServiceServer interface {
+	GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error)
+	mustEmbedUnimplementedLiteKubeNCBootstrapServiceServer()
+}
+
+// UnimplementedLiteKubeNCBootstrapServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedLiteKubeNCBootstrapServiceServer struct {
+}
+
+func (UnimplementedLiteKubeNCBootstrapServiceServer) GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetToken not implemented")
+}
+func (UnimplementedLiteKubeNCBootstrapServiceServer) mustEmbedUnimplementedLiteKubeNCBootstrapServiceServer() {
+}
+
+// UnsafeLiteKubeNCBootstrapServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to LiteKubeNCBootstrapServiceServer will
+// result in compilation errors.
+type UnsafeLiteKubeNCBootstrapServiceServer interface {
+	mustEmbedUnimplementedLiteKubeNCBootstrapServiceServer()
+}
+
+func RegisterLiteKubeNCBootstrapServiceServer(s grpc.ServiceRegistrar, srv LiteKubeNCBootstrapServiceServer) {
+	s.RegisterService(&LiteKubeNCBootstrapService_ServiceDesc, srv)
+}
+
+func _LiteKubeNCBootstrapService_GetToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LiteKubeNCBootstrapServiceServer).GetToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.LiteKubeNCBootstrapService/GetToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LiteKubeNCBootstrapServiceServer).GetToken(ctx, req.(*GetTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// LiteKubeNCBootstrapService_ServiceDesc is the grpc.ServiceDesc for LiteKubeNCBootstrapService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LiteKubeNCBootstrapService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.LiteKubeNCBootstrapService",
+	HandlerType: (*LiteKubeNCBootstrapServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetToken",
+			Handler:    _LiteKubeNCBootstrapService_GetToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

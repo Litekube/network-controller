@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"io/ioutil"
-	"log"
 	"net"
 	"path/filepath"
 	"strconv"
@@ -26,7 +25,9 @@ import (
 
 type GrpcServer struct {
 	*pb_gen.UnimplementedLiteKubeNCServiceServer
+	*pb_gen.UnimplementedLiteKubeNCBootstrapServiceServer
 	port             int
+	bootstrapPort    int
 	UnRegisterCh     chan string
 	service          *internal.NetworkControllerService
 	grpcTlsConfig    config.TLSConfig
@@ -36,10 +37,15 @@ type GrpcServer struct {
 var logger = utils.GetLogger()
 var gServer *GrpcServer
 
-func newGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServer {
+func GetGServer() *GrpcServer {
+	return gServer
+}
+
+func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServer {
 	s := &GrpcServer{
-		port:         cfg.GrpcPort,
-		UnRegisterCh: unRegisterCh,
+		port:          cfg.GrpcPort,
+		bootstrapPort: cfg.BootstrapPort,
+		UnRegisterCh:  unRegisterCh,
 		grpcTlsConfig: config.TLSConfig{
 			CAFile:         filepath.Join(cfg.GrpcCertDir, contant.CAFile),
 			CAKeyFile:      filepath.Join(cfg.GrpcCertDir, contant.CAKeyFile),
@@ -66,19 +72,16 @@ func newGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 }
 
 func StartGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) {
-	gServer = newGrpcServer(cfg, unRegisterCh)
 	//utils.CreateDir(cfg.GrpcCertDir)
 	//err := certs.CheckGrpcCertConfig(gServer.grpcTlsConfig)
 	//if err != nil {
 	//	logger.Error(err)
 	//}
-	err := gServer.startGrpcServerTcp()
-	if err != nil {
-		logger.Error(err)
-	}
+	go gServer.StartGrpcServerTcp()
+	go gServer.StartBootstrapServerTcp()
 }
 
-func (s *GrpcServer) startGrpcServerTcp() error {
+func (s *GrpcServer) StartGrpcServerTcp() error {
 	tcpAddr := fmt.Sprintf(":%d", s.port)
 	lis, err := net.Listen("tcp", tcpAddr)
 	if err != nil {
@@ -98,25 +101,25 @@ func (s *GrpcServer) startGrpcServerTcp() error {
 	cert, err := tls.LoadX509KeyPair(s.grpcTlsConfig.ServerCertFile, s.grpcTlsConfig.ServerKeyFile)
 	//cert, err := certificate.LoadCertificate(s.CertFile)
 	if err != nil {
-		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
+		logger.Errorf("tls.LoadX509KeyPair err: %v", err)
 	}
 
 	certPool := x509.NewCertPool()
 	ca, err := ioutil.ReadFile(s.grpcTlsConfig.CAFile)
 	if err != nil {
-		log.Fatalf("ioutil.ReadFile err: %v", err)
+		logger.Errorf("ioutil.ReadFile err: %v", err)
 	}
 
 	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		log.Fatalf("certPool.AppendCertsFromPEM err")
+		logger.Errorf("certPool.AppendCertsFromPEM err")
 	}
 
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		// fix here
-		//ClientAuth:         tls.RequireAndVerifyClientCert,
-		ClientAuth: tls.VerifyClientCertIfGiven,
-		ClientCAs:  certPool,
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		//ClientAuth: tls.VerifyClientCertIfGiven,
+		ClientCAs: certPool,
 	})
 
 	//interceptor := grpc.UnaryInterceptor(TokenInterceptor)

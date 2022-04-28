@@ -31,6 +31,7 @@ type ServerConfig struct {
 	Ip             string `yaml:"ip"`
 	Port           int    `yaml:"port"`
 	NetworkCertDir string `yaml:"networkCertDir"`
+	BootstrapPort  int    `yaml:"bootstrapPort"`
 	GrpcPort       int    `yaml:"grpcPort"`
 	GrpcCertDir    string `yaml:"grpcCertDir"`
 

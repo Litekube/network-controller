@@ -73,7 +73,7 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.Lit
 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
 
-grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -plaintext 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
 grpcurl -d '{"expireTime": 10}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 
@@ -88,6 +88,10 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.UnRegister
 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
+
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
+
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
 grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```

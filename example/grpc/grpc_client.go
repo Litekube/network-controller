@@ -10,6 +10,7 @@ import (
 var logger = utils.GetLogger()
 
 var Client *grpc_client.GrpcClient
+var BootstrapClient *grpc_client.GrpcBootStrapClient
 
 func Init() {
 	Client = &grpc_client.GrpcClient{
@@ -24,17 +25,18 @@ func Init() {
 	logger.Info(err)
 }
 
-func Init2() {
-	Client = &grpc_client.GrpcClient{
-		Ip:   "101.43.253.110",
-		Port: "6440",
+func InitBootstrapClient() {
+	BootstrapClient = &grpc_client.GrpcBootStrapClient{
+		Ip:            "101.43.253.110",
+		BootstrapPort: "6439",
 	}
-	err := Client.InitGrpcClientConn()
+	err := BootstrapClient.InitGrpcBootstrapClientConn()
 	logger.Info(err)
 }
 
 func main() {
 	Init()
+	InitBootstrapClient()
 }
 
 func GetBootstrapToken() (*pb_gen.GetBootStrapTokenResponse, error) {
@@ -54,7 +56,7 @@ func GetToken(bootstrapToken string) (*pb_gen.GetTokenResponse, error) {
 		BootStrapToken: bootstrapToken,
 	}
 
-	resp, err := Client.C.GetToken(context.Background(), req)
+	resp, err := BootstrapClient.BootstrapC.GetToken(context.Background(), req)
 	logger.Info(resp)
 	logger.Info(err)
 

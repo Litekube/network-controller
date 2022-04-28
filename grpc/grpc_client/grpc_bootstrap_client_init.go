@@ -6,33 +6,30 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
-	"github.com/Litekube/network-controller/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"io/ioutil"
 	"path/filepath"
 )
 
-type GrpcClient struct {
-	C           pb_gen.LiteKubeNCServiceClient
-	Ip          string
-	Port        string
-	GrpcCertDir string
-	CAFile      string
-	CertFile    string
-	KeyFile     string
+type GrpcBootStrapClient struct {
+	BootstrapC    pb_gen.LiteKubeNCBootstrapServiceClient
+	Ip            string
+	BootstrapPort string
+	GrpcCertDir   string
+	CAFile        string
+	CertFile      string
+	KeyFile       string
 }
 
-var logger = utils.GetLogger()
-
-func (c *GrpcClient) InitGrpcClientConn() error {
+func (c *GrpcBootStrapClient) InitGrpcBootstrapClientConn() error {
 	// Set up a connection to the server.
-	var address string
-	if len(c.Ip) == 0 || len(c.Port) == 0 {
+	var bootAddress string
+	if len(c.Ip) == 0 || len(c.BootstrapPort) == 0 {
 		logger.Error("ip and port can't be empty")
 		return errors.New("ip and port can't be empty")
 	}
-	address = fmt.Sprintf("%s:%s", c.Ip, c.Port)
+	bootAddress = fmt.Sprintf("%s:%s", c.Ip, c.BootstrapPort)
 
 	var dialOpt []grpc.DialOption
 	var creds credentials.TransportCredentials
@@ -59,17 +56,17 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 			RootCAs:      certPool,
 		})
 	} else {
-		logger.Errorf("no certs parameters")
-		return errors.New("plz add certs parameters")
+		creds = credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})
 	}
 	dialOpt = append(dialOpt, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 
-	// init grpc client
-	conn, err := grpc.Dial(address, dialOpt...)
+	bootConn, err := grpc.Dial(bootAddress, dialOpt...)
 	if err != nil {
 		logger.Errorf("can't connect: %v", err)
 		return err
 	}
-	c.C = pb_gen.NewLiteKubeNCServiceClient(conn)
+	c.BootstrapC = pb_gen.NewLiteKubeNCBootstrapServiceClient(bootConn)
 	return nil
 }
