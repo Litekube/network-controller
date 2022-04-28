@@ -1,6 +1,7 @@
 package grpc_server
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -10,13 +11,17 @@ import (
 	"github.com/Litekube/network-controller/internal"
 	"github.com/Litekube/network-controller/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"log"
 	"net"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type GrpcServer struct {
@@ -108,11 +113,16 @@ func (s *GrpcServer) startGrpcServerTcp() error {
 
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
+		// fix here
+		//ClientAuth:         tls.RequireAndVerifyClientCert,
+		ClientAuth: tls.VerifyClientCertIfGiven,
+		ClientCAs:  certPool,
 	})
-	gopts = append(gopts, grpc.Creds(creds))
 
+	//interceptor := grpc.UnaryInterceptor(TokenInterceptor)
+	//gopts = append(gopts, []grpc.ServerOption{grpc.Creds(creds), interceptor}...)
+
+	gopts = append(gopts, []grpc.ServerOption{grpc.Creds(creds)}...)
 	server := grpc.NewServer(gopts...)
 	// register reflection for grpcurl service
 	reflection.Register(server)
@@ -124,4 +134,29 @@ func (s *GrpcServer) startGrpcServerTcp() error {
 		return err
 	}
 	return nil
+}
+
+func TokenInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+
+	//通过metadata
+	md, exist := metadata.FromIncomingContext(ctx)
+	if !exist {
+		return nil, status.Errorf(codes.Unauthenticated, "no metadata")
+	}
+
+	if strings.Contains(info.FullMethod, "/GetBootStrapToken") {
+		// bootstrap, handle directly
+		return handler(ctx, req)
+	} else if strings.Contains(info.FullMethod, "/GetToken") {
+		// check bootstrap token
+		if _, ok := md["bootstrap-token"]; !ok {
+			return nil, status.Errorf(codes.Aborted, "plz provide bootstrap-token")
+		}
+	} else {
+		// check token
+		if _, ok := md["node-token"]; !ok {
+			return nil, status.Errorf(codes.Aborted, "plz provide node-token")
+		}
+	}
+	return handler(ctx, req)
 }

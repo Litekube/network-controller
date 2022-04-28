@@ -52,13 +52,13 @@ func (c *GrpcClient) InitGrpcClientConn() error {
 		logger.Errorf("certPool.AppendCertsFromPEM err")
 		return err
 	}
-
+	//logger.Info(cert)
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ServerName:   c.Ip,
 		RootCAs:      certPool,
 	})
-	dialOpt = append(dialOpt, grpc.WithTransportCredentials(creds))
+	dialOpt = append(dialOpt, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 
 	conn, err := grpc.Dial(address, dialOpt...)
 	if err != nil {

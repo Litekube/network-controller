@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
 	certutil "github.com/rancher/dynamiclistener/cert"
+	"google.golang.org/grpc/metadata"
 	"testing"
 	"time"
 )
@@ -14,7 +15,7 @@ func TestGetGrpcClient(t *testing.T) {
 	client := &GrpcClient{
 		Ip:          "101.43.253.110",
 		Port:        "6440",
-		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/network-controller/certs/test/",
+		GrpcCertDir: "/Users/zhujianxing/GoLandProjects/network-controller/certs/test2/",
 		CAFile:      "ca2.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
@@ -70,8 +71,10 @@ func TestGrpcClient_InitGrpcClientConn2(t *testing.T) {
 	err := client.InitGrpcClientConn()
 	logger.Info(err)
 	req := &pb_gen.HelloWorldRequest{}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
+	md := metadata.New(map[string]string{
+		"node-token": "xx",
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	resp, err := client.C.HelloWorld(ctx, req)
 	logger.Info(resp)
