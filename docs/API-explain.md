@@ -85,9 +85,9 @@ grpcurl -d '{"expireTime": 10}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCServ
 # grpc调用
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState
 
-grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.UnRegister
+grpcurl -d '{"token": "009794b89caa4881"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.UnRegister
 
-grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
+grpcurl -d '{"token": "009794b89caa4881"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetRegistedIp
 
 grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
@@ -103,14 +103,16 @@ grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.
 - demo：获取一个过期时间为10min的Bootstrap token
 
 ```shell
-grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
+grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
+
+grpcurl -d '{"expireTime": -1}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
 
 - GetBootStrapTokenRequest参数
 
-| **参数**   | 类型  | 含义     | 是否必须 | demo |
-| ---------- | ----- | -------- | -------- | ---- |
-| expireTime | int32 | 过期时间 | 否       | 10   |
+| **参数**   | 类型  | 含义     | 是否必须 | demo                 |
+| ---------- | ----- | -------- | -------- | -------------------- |
+| expireTime | int32 | 过期时间 | 否       | 10（负数表示不过期） |
 
 - GetBootStrapTokenResponse返回数据
 
@@ -129,7 +131,9 @@ grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.
 - demo：节点注册node-token
 
 ```shell
-grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
+
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 ```
 
 - GetTokenRequest参数
