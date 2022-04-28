@@ -68,4 +68,4 @@ if you want to know more about this project, please look at :
 - [network-controller Principle Explaination doc](docs/network-controller-explain.md)
 - [API Reference doc](docs/API-explain.md)
 - [PRD & System Design doc](docs/design-explain.md)
-- [Usage Demo & doc](https://github.com/WANNA959/network-controller-usage)
+- [Usage Demo & doc](docs/demo-usage.md)
