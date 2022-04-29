@@ -45,14 +45,16 @@ message GetTokenResponse {
   string code = 1;
   string message = 2;
   string token = 3;
-  string cloudIp=4;
+  string networkServerIp=4;
   string networkServerPort=5;
-  string GrpcCaCert=6;
-  string GrpcClientKey=7;
-  string GrpcClientCert=8;
-  string NetworkCaCert=9;
-  string NetworkClientKey=10;
-  string NetworkClientCert=11;
+  string GrpcServerIp=6;
+  string GrpcServerPort=7;
+  string GrpcCaCert=8;
+  string GrpcClientKey=9;
+  string GrpcClientCert=10;
+  string NetworkCaCert=11;
+  string NetworkClientKey=12;
+  string NetworkClientCert=13;
 }
 
 message CheckConnStateRequest {

@@ -91,7 +91,9 @@ grpcurl -d '{"token": "009794b89caa4881"}' -cacert ca.pem -cert client.pem -key 
 
 grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
-grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
+grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 127.0.0.1:6439 pb.LiteKubeNCBootstrapService.GetToken
+
+grpcurl -d '{"bootStrapToken": "8ed931e1c36d4d9d"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
 grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
