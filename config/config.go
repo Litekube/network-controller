@@ -37,10 +37,19 @@ type ServerConfig struct {
 	GrpcPort       int    `yaml:"grpcPort"`
 	GrpcCertDir    string `yaml:"grpcCertDir"`
 
-	ListenAddr      string `yaml:"listenAddr"`
 	NetworkAddr     string `yaml:"networkAddr"`
 	MTU             int    `yaml:"mtu"`
 	Interconnection bool   `yaml:"interconnection"`
+
+	NetworkCAFile         string
+	NetworkCAKeyFile      string
+	NetworkServerCertFile string
+	NetworkServerKeyFile  string
+
+	GrpcCAFile         string
+	GrpcCAKeyFile      string
+	GrpcServerCertFile string
+	GrpcServerKeyFile  string
 }
 
 // Client Config
@@ -51,9 +60,10 @@ type ClientConfig struct {
 	MTU             int    `yaml:"mut"`
 	Token           string `yaml:"token"`
 	RedirectGateway bool   `yaml:"redirectGateway"`
-	CAFile          string
-	ClientCertFile  string
-	ClientKeyFile   string
+
+	CAFile         string
+	ClientCertFile string
+	ClientKeyFile  string
 }
 
 type NetworkConfig struct {
@@ -77,6 +87,15 @@ func ParseConfig(filename string) (interface{}, error) {
 
 	switch cfg.Mode {
 	case "server":
+		cfg.Server.NetworkCAFile = filepath.Join(cfg.Server.NetworkCertDir, contant.CAFile)
+		cfg.Server.NetworkCAKeyFile = filepath.Join(cfg.Server.NetworkCertDir, contant.CAKeyFile)
+		cfg.Server.NetworkServerCertFile = filepath.Join(cfg.Server.NetworkCertDir, contant.ServerCertFile)
+		cfg.Server.NetworkServerKeyFile = filepath.Join(cfg.Server.NetworkCertDir, contant.ServerKeyFile)
+
+		cfg.Server.GrpcCAFile = filepath.Join(cfg.Server.GrpcCertDir, contant.CAFile)
+		cfg.Server.GrpcCAKeyFile = filepath.Join(cfg.Server.GrpcCertDir, contant.CAKeyFile)
+		cfg.Server.GrpcServerCertFile = filepath.Join(cfg.Server.GrpcCertDir, contant.ServerCertFile)
+		cfg.Server.GrpcServerKeyFile = filepath.Join(cfg.Server.GrpcCertDir, contant.ServerKeyFile)
 		return cfg.Server, nil
 	case "client":
 		cfg.Client.CAFile = filepath.Join(cfg.Client.NetworkCertDir, contant.CAFile)
