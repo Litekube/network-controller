@@ -67,7 +67,7 @@ func NewGrpcServer(cfg config.ServerConfig, unRegisterCh chan string) *GrpcServe
 	if ip == "" {
 		ip = cfg.Ip
 	}
-	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.GrpcPort))
+	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, strconv.Itoa(cfg.BootstrapPort))
 	return s
 }
 

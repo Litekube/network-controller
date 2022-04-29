@@ -17,18 +17,18 @@ type NetworkControllerService struct {
 	unRegisterCh     chan string
 	grpcTlsConfig    config.TLSConfig
 	networkTlsConfig config.TLSConfig
-	ip               string
+	bootstrapIp      string
 	port             string
 }
 
 var logger = utils.GetLogger()
 
-func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, ip, port string) *NetworkControllerService {
+func NewLiteNCService(unRegisterCh chan string, grpcTlsConfig config.TLSConfig, networkTlsConfig config.TLSConfig, bootstrapIp, port string) *NetworkControllerService {
 	return &NetworkControllerService{
 		unRegisterCh:     unRegisterCh,
 		grpcTlsConfig:    grpcTlsConfig,
 		networkTlsConfig: networkTlsConfig,
-		ip:               ip,
+		bootstrapIp:      bootstrapIp,
 		port:             port,
 	}
 }
@@ -43,7 +43,7 @@ func (service *NetworkControllerService) GetBootStrapToken(ctx context.Context, 
 			Code:           code,
 			Message:        message,
 			BootStrapToken: token,
-			CloudIp:        service.ip,
+			CloudIp:        service.bootstrapIp,
 			Port:           service.port,
 		}
 		logger.Debugf("resp: %+v", resp)
