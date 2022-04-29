@@ -9,6 +9,6 @@ client:
   # MTU
   mtu: 1400
   # node token
-  token: 009794b89caa4881
+  token: e95b4398c1514a24
   # if redict gateway
   redirectGateway: false

@@ -19,9 +19,11 @@ package config
 
 import (
 	"errors"
+	"github.com/Litekube/network-controller/contant"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 )
 
 // server.yml / client.yml
@@ -49,6 +51,9 @@ type ClientConfig struct {
 	MTU             int    `yaml:"mut"`
 	Token           string `yaml:"token"`
 	RedirectGateway bool   `yaml:"redirectGateway"`
+	CAFile          string
+	ClientCertFile  string
+	ClientKeyFile   string
 }
 
 type NetworkConfig struct {
@@ -74,6 +79,9 @@ func ParseConfig(filename string) (interface{}, error) {
 	case "server":
 		return cfg.Server, nil
 	case "client":
+		cfg.Client.CAFile = filepath.Join(cfg.Client.NetworkCertDir, contant.CAFile)
+		cfg.Client.ClientCertFile = filepath.Join(cfg.Client.NetworkCertDir, contant.ClientCertFile)
+		cfg.Client.ClientKeyFile = filepath.Join(cfg.Client.NetworkCertDir, contant.ClientKeyFile)
 		return cfg.Client, nil
 	default:
 		return nil, errors.New("Wrong config data")

@@ -73,10 +73,10 @@ func NewClient(cfg config.ClientConfig) *Client {
 		state:   0,
 		routes:  make([]string, 0, 1024),
 		ClientTLSConfig: config.TLSConfig{
-			CAFile:         filepath.Join(cfg.NetworkCertDir, contant.CAFile),
+			CAFile:         cfg.CAFile,
 			CAKeyFile:      filepath.Join(cfg.NetworkCertDir, contant.CAKeyFile),
-			ClientCertFile: filepath.Join(cfg.NetworkCertDir, contant.ClientCertFile),
-			ClientKeyFile:  filepath.Join(cfg.NetworkCertDir, contant.ClientKeyFile),
+			ClientCertFile: cfg.ClientCertFile,
+			ClientKeyFile:  cfg.ClientKeyFile,
 		},
 	}
 	return client
