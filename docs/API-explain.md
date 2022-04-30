@@ -83,6 +83,10 @@ grpcurl -d '{"expireTime": 10}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCServ
 
 ```shell
 # grpc调用
+grpcurl -d '' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.HealthCheck
+
+grpcurl -d '' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.HealthCheck
+
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState
 
 grpcurl -d '{"token": "009794b89caa4881"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.UnRegister

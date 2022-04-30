@@ -7,6 +7,7 @@ option go_package = "./pb_gen;pb_gen";
 //RPC接口
 service LiteKubeNCService {
   rpc HelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {}
+  rpc HealthCheck(HealthCheckRequest) returns(HealthCheckResponse) {}
   rpc GetBootStrapToken(GetBootStrapTokenRequest) returns (GetBootStrapTokenResponse) {}
   rpc CheckConnState(CheckConnStateRequest) returns (CheckConnResponse){}
   rpc UnRegister(UnRegisterRequest) returns (UnRegisterResponse){}
@@ -14,6 +15,7 @@ service LiteKubeNCService {
 }
 
 service LiteKubeNCBootstrapService {
+  rpc HealthCheck(HealthCheckRequest) returns(HealthCheckResponse) {}
   rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {}
 }
 
@@ -23,6 +25,12 @@ message HelloWorldRequest {
 
 message HelloWorldResponse {
   string thanks_text = 1;
+}
+
+message HealthCheckRequest{}
+
+message HealthCheckResponse{
+  string code = 1;
 }
 
 message GetBootStrapTokenRequest {
