@@ -19,6 +19,9 @@ func GetDb() *sql.DB {
 }
 
 func InitSqlite(dbPath string) (err error) {
+	if dbPath == "" {
+		dbPath = dbName
+	}
 	db, err = sql.Open(dbDriverName, dbPath)
 	if err != nil {
 		logger.Infof("fail to open sqlite err: %+v", err)
