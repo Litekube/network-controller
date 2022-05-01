@@ -1,6 +1,6 @@
 mode: server
 server:
-  # optional: network server ip
+  # network server ip
   ip: 101.43.253.110
   # network server port to listen
   port: 6441
