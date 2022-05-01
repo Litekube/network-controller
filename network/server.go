@@ -115,10 +115,19 @@ func (server *NetworkServer) Run() error {
 
 	// init db
 	sqlite.InitSqlite(server.cfg.DbPath)
+	// networkaddr = 10.1.1.1/24
+	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
+	if err != nil {
+		return err
+	}
+
+	serverIp := GetNetworkServerIp(subnet.IP)
+	go networkServer.initSyncBindIpWithDb(serverIp)
+	go networkServer.handleGrpcUnRegister()
 
 	unRegisterCh := make(chan string, 8)
 	networkServer.unRegisterCh = unRegisterCh
-	gServer := grpc_server.NewGrpcServer(server.cfg, server.ctx, server.stopCh, unRegisterCh)
+	gServer := grpc_server.NewGrpcServer(server.cfg, server.ctx, server.stopCh, unRegisterCh, serverIp)
 	go gServer.StartGrpcServerTcp()
 	go gServer.StartBootstrapServerTcp()
 
@@ -136,15 +145,6 @@ func (server *NetworkServer) Run() error {
 		return err
 	}
 	networkServer.iface = iface
-
-	// networkaddr = 10.1.1.1/24
-	ip, subnet, err := net.ParseCIDR(server.cfg.NetworkAddr)
-	if err != nil {
-		return err
-	}
-
-	go networkServer.initSyncBindIpWithDb(subnet.IP)
-	go networkServer.handleGrpcUnRegister()
 
 	err = setTunIP(iface, ip, subnet)
 	if err != nil {
@@ -355,7 +355,7 @@ func (server *NetworkServer) cleanUp() {
 	os.Exit(0)
 }
 
-func (server *NetworkServer) initSyncBindIpWithDb(ip net.IP) error {
+func (server *NetworkServer) initSyncBindIpWithDb(serverIp string) error {
 	defer server.wg.Done()
 
 	nm := sqlite.NetworkMgr{}
@@ -377,7 +377,6 @@ func (server *NetworkServer) initSyncBindIpWithDb(ip net.IP) error {
 	nm.UpdateAllState()
 
 	// ignore exsit err, guarantee for reserverd
-	serverIp := GetNetworkServerIp(ip)
 	logger.Debugf("network server ip:%+v", serverIp)
 	nm.Insert(sqlite.NetworkMgr{
 		Token:  "reserverd",

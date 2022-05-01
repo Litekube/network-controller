@@ -9,7 +9,6 @@ import (
 	"github.com/Litekube/network-controller/contant"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
 	"github.com/Litekube/network-controller/internal"
-	"github.com/Litekube/network-controller/sqlite"
 	"github.com/Litekube/network-controller/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -22,7 +21,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type GrpcServer struct {
@@ -46,7 +44,7 @@ func GetGServer() *GrpcServer {
 	return gServer
 }
 
-func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan struct{}, unRegisterCh chan string) *GrpcServer {
+func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan struct{}, unRegisterCh chan string, serverIp string) *GrpcServer {
 	s := &GrpcServer{
 		ctx:               ctx,
 		stopCh:            stopCh,
@@ -76,23 +74,6 @@ func NewGrpcServer(cfg config.ServerConfig, ctx context.Context, stopCh chan str
 	if ip == "" {
 		//backup
 		ip = utils.QueryPublicIp()
-	}
-
-	nm := sqlite.NetworkMgr{}
-	serverIp := ""
-	// in 1s: may wait for init insert ReservedToken
-	for i := 0; i < 20; i++ {
-		network, err := nm.QueryByToken(contant.ReservedToken)
-		if err != nil || network.BindIp == "" {
-			time.Sleep(50 * time.Millisecond)
-			continue
-		}
-		serverIp = network.BindIp
-		break
-	}
-	if serverIp == "" {
-		// backup
-		serverIp = ip
 	}
 
 	s.service = internal.NewLiteNCService(unRegisterCh, s.grpcTlsConfig, s.networkTlsConfig, ip, serverIp, strconv.Itoa(cfg.BootstrapPort), strconv.Itoa(cfg.GrpcPort), strconv.Itoa(cfg.Port))
