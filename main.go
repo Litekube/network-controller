@@ -25,6 +25,7 @@ import (
 	server "github.com/Litekube/network-controller/network"
 	"github.com/Litekube/network-controller/utils"
 	"os"
+	"time"
 )
 
 var debug bool
@@ -40,13 +41,6 @@ func main() {
 
 	logger := utils.GetLogger()
 
-	checkerr := func(err error) {
-		if err != nil {
-			logger.Error(err.Error())
-			os.Exit(1)
-		}
-	}
-
 	if cfgFile == "" {
 		cfgFile = flag.Arg(0)
 	}
@@ -55,7 +49,10 @@ func main() {
 
 	icfg, err := config.ParseConfig(cfgFile)
 	logger.Debug(icfg)
-	checkerr(err)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	//maxProcs := runtime.GOMAXPROCS(0)
 	//if maxProcs < 2 {
@@ -66,12 +63,20 @@ func main() {
 	case config.ServerConfig:
 		networkServer := server.NewServer(cfg)
 		err = networkServer.Run()
-		checkerr(err)
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
 	case config.ClientConfig:
 		networkClient := client.NewClient(cfg)
 		err := networkClient.Run()
-		checkerr(err)
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
 	default:
 		logger.Error("Invalid config file")
 	}
+	time.Sleep(500 * time.Millisecond)
+	logger.Info("main exit")
 }

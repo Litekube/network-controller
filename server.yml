@@ -14,6 +14,8 @@ server:
   grpcCertDir: /root/go_project/network-controller/certs/test1/
   # server addr
   networkAddr: 10.1.1.1/24
+  # db persis path
+  dbPath: /tmp/litekube-nc.db
   # MTU
   mtu: 1400
   # allow communication between clients

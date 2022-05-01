@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
 	"github.com/Litekube/network-controller/utils"
@@ -50,4 +51,5 @@ func main() {
 	default:
 		logger.Error("Invalid config file")
 	}
+	fmt.Println("main exit")
 }

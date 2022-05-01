@@ -97,9 +97,9 @@ grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:643
 
 grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 127.0.0.1:6439 pb.LiteKubeNCBootstrapService.GetToken
 
-grpcurl -d '{"bootStrapToken": "8ed931e1c36d4d9d"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
+grpcurl -d '{"bootStrapToken": "65bdd99bf8904634"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 
-grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
+grpcurl -d '{"expireTime": -1}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
 
 ### 接口列表
