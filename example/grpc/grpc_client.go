@@ -2,27 +2,25 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/Litekube/network-controller/grpc/grpc_client"
 	"github.com/Litekube/network-controller/grpc/pb_gen"
-	"github.com/Litekube/network-controller/utils"
 )
-
-var logger = utils.GetLogger()
 
 var Client *grpc_client.GrpcClient
 var BootstrapClient *grpc_client.GrpcBootStrapClient
 
 func Init() {
 	Client = &grpc_client.GrpcClient{
-		Ip:          "101.43.253.110",
+		Ip:          "127.0.0.1",
 		Port:        "6440",
-		GrpcCertDir: "/root/go_project/network-controller-usage/certs/test1/",
+		GrpcCertDir: "/root/go_project/network-controller/certs/grpc/",
 		CAFile:      "ca.pem",
 		CertFile:    "client.pem",
 		KeyFile:     "client-key.pem",
 	}
 	err := Client.InitGrpcClientConn()
-	logger.Info(err)
+	fmt.Println(err)
 }
 
 func InitBootstrapClient() {
@@ -31,7 +29,7 @@ func InitBootstrapClient() {
 		BootstrapPort: "6439",
 	}
 	err := BootstrapClient.InitGrpcBootstrapClientConn()
-	logger.Info(err)
+	fmt.Println(err)
 }
 
 func main() {
@@ -45,10 +43,10 @@ func GetBootstrapToken() (*pb_gen.GetBootStrapTokenResponse, error) {
 	}
 
 	resp, err := Client.C.GetBootStrapToken(context.Background(), req)
-	logger.Info(resp)
-	logger.Info(err)
+	fmt.Println(resp)
+	fmt.Println(err)
 
-	return resp, nil
+	return resp, err
 }
 
 func GetToken(bootstrapToken string) (*pb_gen.GetTokenResponse, error) {
@@ -57,10 +55,10 @@ func GetToken(bootstrapToken string) (*pb_gen.GetTokenResponse, error) {
 	}
 
 	resp, err := BootstrapClient.BootstrapC.GetToken(context.Background(), req)
-	logger.Info(resp)
-	logger.Info(err)
+	fmt.Println(resp)
+	fmt.Println(err)
 
-	return resp, nil
+	return resp, err
 }
 
 func CheckConnState(token string) (*pb_gen.CheckConnResponse, error) {
@@ -69,8 +67,8 @@ func CheckConnState(token string) (*pb_gen.CheckConnResponse, error) {
 	}
 
 	resp, err := Client.C.CheckConnState(context.Background(), req)
-	logger.Info(resp)
-	logger.Info(err)
+	fmt.Println(resp)
+	fmt.Println(err)
 	return resp, err
 }
 
@@ -80,7 +78,7 @@ func UnRegister(token string) (*pb_gen.UnRegisterResponse, error) {
 	}
 
 	resp, err := Client.C.UnRegister(context.Background(), req)
-	logger.Info(resp)
-	logger.Info(err)
+	fmt.Println(resp)
+	fmt.Println(err)
 	return resp, err
 }

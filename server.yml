@@ -5,17 +5,21 @@ server:
   # network server port to listen
   port: 6441
   # network tls cert root dir
-  networkCertDir: /root/go_project/network-controller/certs/test2/
+  networkCertDir: /root/go_project/network-controller/certs/network/
   # grpc server port
   grpcPort: 6440
   # grpc bootstrap port
   bootstrapPort: 6439
   # grpc tls cert root dir
-  grpcCertDir: /root/go_project/network-controller/certs/test1/
+  grpcCertDir: /root/go_project/network-controller/certs/grpc/
   # server addr
   networkAddr: 10.1.1.1/24
   # db persis path
   dbPath: /tmp/litekube-nc.db
+  # log file path under user dir
+  logDir: /root/nc/logs/server
+  # log level
+  debug: true
   # MTU
   mtu: 1400
   # allow communication between clients

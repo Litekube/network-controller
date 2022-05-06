@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Litekube/network-controller/config"
 	"github.com/Litekube/network-controller/network"
-	"github.com/Litekube/network-controller/utils"
 	"os"
 )
 
@@ -17,14 +16,8 @@ func main() {
 	flag.StringVar(&cfgFile, "config", "", "config file")
 	flag.Parse()
 
-	utils.InitLogger()
-	utils.SetLoggerLevel(debug)
-
-	logger := utils.GetLogger()
-
 	checkerr := func(err error) {
 		if err != nil {
-			logger.Error(err.Error())
 			os.Exit(1)
 		}
 	}
@@ -33,10 +26,7 @@ func main() {
 		cfgFile = flag.Arg(0)
 	}
 
-	logger.Infof("using config file: %+v", cfgFile)
-
 	icfg, err := config.ParseConfig(cfgFile)
-	logger.Debug(icfg)
 	checkerr(err)
 
 	switch cfg := icfg.(type) {
@@ -49,7 +39,6 @@ func main() {
 		err := client.Run()
 		checkerr(err)
 	default:
-		logger.Error("Invalid config file")
 	}
 	fmt.Println("main exit")
 }

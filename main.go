@@ -20,12 +20,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Litekube/network-controller/config"
 	client "github.com/Litekube/network-controller/network"
 	server "github.com/Litekube/network-controller/network"
-	"github.com/Litekube/network-controller/utils"
 	"os"
-	"time"
 )
 
 var debug bool
@@ -36,21 +35,12 @@ func main() {
 	flag.StringVar(&cfgFile, "config", "", "config file")
 	flag.Parse()
 
-	utils.InitLogger()
-	utils.SetLoggerLevel(debug)
-
-	logger := utils.GetLogger()
-
 	if cfgFile == "" {
 		cfgFile = flag.Arg(0)
 	}
 
-	logger.Infof("using config file: %+v", cfgFile)
-
 	icfg, err := config.ParseConfig(cfgFile)
-	logger.Debug(icfg)
 	if err != nil {
-		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -62,21 +52,23 @@ func main() {
 	switch cfg := icfg.(type) {
 	case config.ServerConfig:
 		networkServer := server.NewServer(cfg)
-		err = networkServer.Run()
-		if err != nil {
-			logger.Error(err.Error())
-			os.Exit(1)
-		}
+		//err = networkServer.Run()
+		//if err != nil {
+		//	logger.Error(err.Error())
+		//	os.Exit(1)
+		//}
+		go networkServer.Run()
+		defer networkServer.Stop()
 	case config.ClientConfig:
 		networkClient := client.NewClient(cfg)
-		err := networkClient.Run()
-		if err != nil {
-			logger.Error(err.Error())
-			os.Exit(1)
-		}
+		//err := networkClient.Run()
+		//if err != nil {
+		//	logger.Error(err.Error())
+		//	os.Exit(1)
+		//}
+		go networkClient.Run()
+		defer networkClient.Wait()
 	default:
-		logger.Error("Invalid config file")
 	}
-	time.Sleep(500 * time.Millisecond)
-	logger.Info("main exit")
+	fmt.Println("main exit")
 }
