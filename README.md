@@ -17,6 +17,10 @@ go mod tidy
 go build -o network-controller main.go
 ```
 
+## Adm tool
+
+[ncadm](https://github.com/Litekube/ncadm), a commond-line tool to control node join to litekube network-controller
+
 ## Configuration
 
 There are two config files to distinguish between client and server.

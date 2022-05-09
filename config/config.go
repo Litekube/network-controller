@@ -63,6 +63,7 @@ type ClientConfig struct {
 	ServerAddr      string `yaml:"serverAddr"`
 	Port            int    `yaml:"port"`
 	LogDir          string `yaml:"logDir"`
+	WorkDir         string `yaml:"workDir"`
 	Debug           bool   `yaml:"debug"`
 	MTU             int    `yaml:"mut"`
 	Token           string `yaml:"token"`
