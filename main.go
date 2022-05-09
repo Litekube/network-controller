@@ -57,7 +57,11 @@ func main() {
 		//	logger.Error(err.Error())
 		//	os.Exit(1)
 		//}
-		go networkServer.Run()
+		go func() {
+			err = networkServer.Run()
+			fmt.Println(err)
+		}()
+
 		defer networkServer.Stop()
 	case config.ClientConfig:
 		networkClient := client.NewClient(cfg)
@@ -66,7 +70,10 @@ func main() {
 		//	logger.Error(err.Error())
 		//	os.Exit(1)
 		//}
-		go networkClient.Run()
+		go func() {
+			err = networkClient.Run()
+			fmt.Println(err)
+		}()
 		defer networkClient.Wait()
 	default:
 	}

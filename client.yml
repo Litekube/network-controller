@@ -11,7 +11,9 @@ client:
   # node token
   token: e95b4398c1514a24
   # log file path under user dir
-  logDir: /root/nc/logs/client
+  logDir: /root/test/logs/network-controller/client
+  # work dir include db
+  workDir: /root/test/network-controller/client
   # log level
   debug: true
   # if redict gateway

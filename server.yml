@@ -15,9 +15,13 @@ server:
   # server addr
   networkAddr: 10.1.1.1/24
   # db persis path
-  dbPath: /tmp/litekube-nc.db
+  # dbPath: /tmp/litekube-nc.db
   # log file path under user dir
-  logDir: /root/nc/logs/server
+  logDir: /root/test/logs/network-controller/server
+  # work dir include db
+  workDir: /root/test/network-controller/server
+  # tls dir for ncadm
+  tlsDir: /root/test/tls/network-control
   # log level
   debug: true
   # MTU
