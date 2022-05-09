@@ -422,13 +422,23 @@ func (server *NetworkServer) cleanUp() {
 		client.ws.Close()
 		delete(server.clients, key)
 	}
-	//close(server.unregister)
-	close(server.stopCh)
+
+	select {
+	case <-server.stopCh:
+		break
+	default:
+		close(server.stopCh)
+	}
 	// code zero indicates success
 	//os.Exit(0)
 }
 
-func (server *NetworkServer) Stop() {
+func (server *NetworkServer) Wait() {
 	defer server.externalWg.Wait()
 	<-server.stopCh
+}
+
+func (server *NetworkServer) Stop() {
+	defer server.externalWg.Wait()
+	close(server.stopCh)
 }

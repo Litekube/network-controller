@@ -348,11 +348,21 @@ func (client *Client) cleanUp() {
 		delRoute(dest)
 	}
 
-	close(client.stopCh)
+	select {
+	case <-client.stopCh:
+		break
+	default:
+		close(client.stopCh)
+	}
 	//os.Exit(0)
+}
+
+func (client *Client) Wait() {
+	defer client.externalWg.Wait()
+	<-client.stopCh
 }
 
 func (client *Client) Stop() {
 	defer client.externalWg.Wait()
-	<-client.stopCh
+	close(client.stopCh)
 }
