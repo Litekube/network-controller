@@ -208,7 +208,14 @@ func (client *Client) Run() error {
 			for _, dest := range client.routes {
 				delRoute(dest)
 			}
-			close(client.stopCh)
+			// avoid close closed channel
+			select {
+			case <-client.stopCh:
+				break
+			default:
+				close(client.stopCh)
+			}
+
 			break
 		} else {
 			if messageType == websocket.TextMessage {

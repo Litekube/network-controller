@@ -74,7 +74,7 @@ func main() {
 			err = networkClient.Run()
 			fmt.Println(err)
 		}()
-		defer networkClient.Wait()
+		defer networkClient.Stop()
 	default:
 	}
 	fmt.Println("main exit")
