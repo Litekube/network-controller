@@ -345,7 +345,7 @@ func (client *Client) cleanUp() {
 	//os.Exit(0)
 }
 
-func (client *Client) Wait() {
+func (client *Client) Stop() {
 	defer client.externalWg.Wait()
 	<-client.stopCh
 }

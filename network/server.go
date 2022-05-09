@@ -429,8 +429,6 @@ func (server *NetworkServer) cleanUp() {
 }
 
 func (server *NetworkServer) Stop() {
-	defer func() {
-		server.externalWg.Wait()
-	}()
+	defer server.externalWg.Wait()
 	<-server.stopCh
 }
