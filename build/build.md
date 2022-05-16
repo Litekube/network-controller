@@ -6,6 +6,7 @@ Building network-controller needs Go 1.1 or higher.
 
 ```shell
 go mod tidy
+cd ./cmd/network-controller
 go build -o network-controller main.go
 ```
 
