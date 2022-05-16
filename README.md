@@ -10,12 +10,7 @@ A network controller implementation over websockets. This is the client/server i
 
 ## Build and Install
 
-Building network-controller needs Go 1.1 or higher.
-
-```shell
-go mod tidy
-go build -o network-controller main.go
-```
+[build doc](./build/build.md)
 
 ## Adm tool
 
