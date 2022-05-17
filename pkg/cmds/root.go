@@ -1,12 +1,10 @@
 package cmds
 
 import (
-	"fmt"
 	"github.com/Litekube/network-controller/pkg/version"
 	"github.com/urfave/cli/v2"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 type AccessConfig struct {
@@ -34,8 +32,7 @@ func NewApp() *cli.App {
 	app.Usage = "ncadm, a commond-line tool to control node join to litekube network-controller"
 	app.Version = version.Version
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("%s version %s\n", app.Name, app.Version)
-		fmt.Printf("go version %s\n", runtime.Version())
+		version.PrintAndExitIfRequested()
 	}
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{

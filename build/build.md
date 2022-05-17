@@ -6,8 +6,13 @@ Building network-controller needs Go 1.1 or higher.
 
 ```shell
 go mod tidy
+# network-controller build
 cd ./cmd/network-controller
 go build -o network-controller main.go
+
+# ncadm build
+cd ./cmd/ncadm
+go build -o ncadm main.go
 ```
 
 ## container-based compile

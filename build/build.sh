@@ -9,11 +9,12 @@ GitCommit=$(git rev-parse HEAD)
 BuildDate=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
 VersionTags="\
-    -X \"github.com/Litekube/network-controller/version.network-controller=$Version\" \
-    -X \"github.com/Litekube/network-controller/version.GitBranch=$GitBranch\" \
-    -X \"github.com/Litekube/network-controller/version.GitVersion=$GitVersion\" \
-    -X \"github.com/Litekube/network-controller/version.GitCommit=$GitCommit\" \
-    -X \"github.com/Litekube/network-controller/version.BuildDate=$BuildDate\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.NetworkController=$Version\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.NcAdm=$Version\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.GitBranch=$GitBranch\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.GitVersion=$GitVersion\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.GitCommit=$GitCommit\" \
+    -X \"github.com/Litekube/network-controller/pkg/version.BuildDate=$BuildDate\" \
 "
 
 # build for one kind of arch-os
