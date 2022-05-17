@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ProjectPath=../../../network-controller
+ProjectPath=../../../LiteKube
 Outputs=$ProjectPath/build/outputs
 Version=0.1.0
 GitBranch=$(git rev-parse --abbrev-ref HEAD)

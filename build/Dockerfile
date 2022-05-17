@@ -39,9 +39,9 @@ RUN mkdir -p /usr/local/toolchain/ && \
 
 ENV PATH=$PATH:/usr/local/toolchain/gcc-linaro-7.5.0-2019.12-i686_arm-linux-gnueabihf/bin
 
-RUN mkdir -p /network-controller
+RUN mkdir -p /LiteKube
 
-WORKDIR /network-controller
+WORKDIR /LiteKube
 
 # RUN chmod +x build/build.sh
 CMD ["bin/bash"]
