@@ -1,6 +1,8 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestQueryPublicIp(t *testing.T) {
 	QueryPublicIp()
