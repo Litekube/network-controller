@@ -3,6 +3,10 @@ A network controller implementation over websockets. This is the client/server i
 
 * [network-controller](#network-controller)
    * [Build and Install](#build-and-install)
+   * [Adm tool](#adm-tool)
+   * [Pre-work](#pre-work)
+      * [Generate tls certificate](#generate-tls-certificate)
+      * [Get token](#get-token)
    * [Configuration](#configuration)
       * [Download](#download)
       * [Network forwarding](#network-forwarding)
@@ -16,6 +20,64 @@ A network controller implementation over websockets. This is the client/server i
 
 [ncadm](https://github.com/Litekube/ncadm), a commond-line tool to control node join to litekube network-controller
 
+## Pre-work
+
+### Generate tls certificate
+
+[certs generation script](./build/gen_certs.sh)
+
+```shell
+cd ./build
+# tls certificate dir
+# network: ./certs/init/test1    grpc: ./certs/init/test2
+# $ip(demo:101.43.253.110) is the host public ip or addressable private ip
+sh gen_certs.sh $ip
+
+# modify ./cmd/network-controller/server.yml
+networkCertDir: /root/go_project/network-controller/certs/init/test1/
+grpcCertDir: /root/go_project/network-controller/certs/init/test2/
+```
+
+### Get token
+
+```shell
+# ./cmd/ncadm compile ncadm
+$ go build -o ncadm .
+
+# generate no-expire bootstrap-token
+$ ./ncadm create-bootstrap-token --life=-1
+
+------------------------------------------------
+network-controller:
+    token: 2283a030cbd54b90@101.43.253.110:6439
+    ExpireMsg: no expire
+------------------------------------------------
+
+# get node-token & network+grpc clients certs
+# --network-certs-dir/--grpc-certs-dir is the directory where client certs store
+$ ./ncadm get-token --bootstrap-token=2283a030cbd54b90 --network-certs-dir=/root/go_project/network-controller/certs/init/gen/network --grpc-certs-dir=/root/go_project/network-controller/certs/init/gen/grpc
+
+------------------------------------------------
+network-controller:
+    BootstrapToken: 2283a030cbd54b90
+    NodeToken: 5f5e4ced3bd44ca1
+    NetworkServerIp: 101.43.253.110
+    NetworkServerPort: 6441
+    GrpcServerIp: 10.1.1.1
+    GrpcServerPort: 6440
+    NetworkCertsDir: /root/go_project/network-controller/certs/init/gen/network
+    GrpcCertsDir: /root/go_project/network-controller/certs/init/gen/grpc
+------------------------------------------------
+```
+
+
+
+```shell
+# modify ./cmd/network-controller/client.yml
+networkCertDir: /root/go_project/network-controller/certs/init/gen/network/
+token: 5f5e4ced3bd44ca1
+```
+
 ## Configuration
 
 There are two config files to distinguish between client and server.
@@ -23,6 +85,7 @@ There are two config files to distinguish between client and server.
 To start server execute the following command:
 
 ```shell
+cd ./cmd/network-controller
 network-controller --config server.yml
 ```
 
@@ -34,7 +97,7 @@ network-controller --config client.yml
 
 ### Download
 
-Todo：release
+[release](https://github.com/Litekube/network-controller/releases)
 
 ### Network forwarding
 On the server the IP forwarding is needed. First we need to be sure that IP forwarding is enabled.
@@ -68,3 +131,4 @@ if you want to know more about this project, please look at :
 - [API Reference doc](docs/API-explain.md)
 - [PRD & System Design doc](docs/design-explain.md)
 - [Usage Demo & doc](docs/demo-usage.md)
+

@@ -17,6 +17,7 @@ var gettokenTemplate = template.Must(template.New("network-controller GetToken")
 ------------------------------------------------
 network-controller:
     BootstrapToken: {{.BootstrapToken}}
+    NodeToken: {{.NodeToken}}
     NetworkServerIp: {{.NetworkServerIp}}
     NetworkServerPort: {{.NetworkServerPort}}
     GrpcServerIp: {{.GrpcServerIp}}
@@ -84,6 +85,7 @@ func getToken(ctx *cli.Context) error {
 
 	data := struct {
 		BootstrapToken    string
+		NodeToken         string
 		NetworkServerIp   string
 		NetworkServerPort string
 		GrpcServerIp      string
@@ -92,6 +94,7 @@ func getToken(ctx *cli.Context) error {
 		GrpcCertsDir      string
 	}{
 		BootstrapToken:    bootstrapToken,
+		NodeToken:         resp.Token,
 		NetworkServerIp:   resp.NetworkServerIp,
 		NetworkServerPort: resp.NetworkServerPort,
 		GrpcServerIp:      resp.GrpcServerIp,
