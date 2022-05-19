@@ -1,16 +1,16 @@
 # network-controller
-A network controller implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The network-controller is built on top of Linux's tun/tap device.
+A network controller implementation over websockets. This is the client/server implementation of a layer-2 software switch able to route packets over websockets connections. The network-controller is built on top of Linux's tun/tap device. At the same time, the grpc interface is added as the control layer.
 
 * [network-controller](#network-controller)
-   * [Build and Install](#build-and-install)
-   * [Adm tool](#adm-tool)
-   * [Pre-work](#pre-work)
-      * [Generate tls certificate](#generate-tls-certificate)
-      * [Get token](#get-token)
-   * [Configuration](#configuration)
-      * [Download](#download)
-      * [Network forwarding](#network-forwarding)
-   * [network-controller-explain](#network-controller-explain)
+    * [Build and Install](#build-and-install)
+    * [Adm tool](#adm-tool)
+    * [Pre-work](#pre-work)
+        * [Generate tls certificate](#generate-tls-certificate)
+        * [Get token](#get-token)
+    * [Configuration &amp; Run](#configuration--run)
+        * [Download](#download)
+        * [Network forwarding](#network-forwarding)
+    * [network-controller-explain doc](#network-controller-explain-doc)
 
 ## Build and Install
 
