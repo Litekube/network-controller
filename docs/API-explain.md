@@ -1,4 +1,4 @@
-English | [简体中文](./API-explain.md_CN.md)
+English | [简体中文](./API-explain_CN.md)
 
 ## gRPC API Doc
 
