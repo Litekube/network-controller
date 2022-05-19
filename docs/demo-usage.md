@@ -1,64 +1,71 @@
-# network-controller使用demo
+English | [简体中文](./demo-usage_CN.md)
 
-* [network-controller使用demo](#network-controller使用demo)
-    * [network部分](#network部分)
-    * [grpc部分](#grpc部分)
-    * [一次完成执行流程](#一次完成执行流程)
+# network-controller usage demo
 
-## network部分
+* [network-controller usage demo](#network-controller-usage-demo)
+   * [Pre-work](#pre-work)
+   * [network part](#network-part)
+   * [grpc part](#grpc-part)
+   * [A complete execution process](#a-complete-execution-process)
 
-- server/client执行详见network/network.go
-    - 根据yml配置文件的不同，可以自动鉴别server or client并启动
-    - 配置文件字段含义见server.yml/client.yml注册
+## Pre-work
+
+[Pre-work certs+token](https://github.com/Litekube/network-controller/tree/main#pre-work)
+
+## network part
+
+- For details on network server/client execution, see network/network.go
+    - Depending on the yaml configuration file, the server or client can be automatically identified and started
+    - For the meaning of the configuration file fields, see the comments in server.yml/client.yml
 
 ```shell
-# network server & grpc server启动
+# run network server & grpc server
 go run network/network.go server.yml
 
-# network client启动
+# run network client
 go run network/network.go client.yml
 ```
 
-## grpc部分
+## grpc part
 
-- 详见grpc/grpc_client.go
-    - 运行前应该先执行 `go run network/network.go server.yml`
+- For details on grpc client execution, see grpc/grpc_client.go
+    - Before running, execute: `go run network/network.go server.yml`
 
 ```shell
 cd grpc
 # get bootstrap token
 go test -v -run TestGetBootstrapToken
 
-# 注册 得到token=a9f683a2d05b4957，以及返回的grpc+network证书
+# Register to get token= a9f683a2d05b4957, and return GRPC + Network certificate
 go test -v -run TestGetToken
 
-# 查询连接状态
+# Query connection Status
 go test -v -run TestCheckConnState 
 
-# 取消注册（取消绑定 & 断连
+# Unregister (unbind & disconnect)
 go test -v -run TestUnRegister 
 ```
 
-## 一次完整执行流程
+## A complete execution process
 
 ```shell
-# 启动network & grpc server
+# run network & grpc server
 go run network/network.go server.yml
 
 cd grpc
 # get bootstrap token
 go test -v -run TestGetBootstrapToken
 
-# 注册 得到token=a9f683a2d05b4957，以及返回的grpc+network证书
+# Register to get token= a9f683a2d05b4957, and return GRPC + Network certificate
 go test -v -run TestGetToken
 
-# 根据token修改client.yml，启动client
+# Modify client.yml according to the token and start the client
 go run network/network.go client.yml
 
-# 查询连接状态
+# Query connection Status
 go test -v -run TestCheckConnState 
 
-# 取消注册（取消绑定 & 断连
+# Unregister (unbind & disconnect)
 go test -v -run TestUnRegister 
 ```
 

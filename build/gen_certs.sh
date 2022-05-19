@@ -63,6 +63,7 @@ cat > server-csr.json <<EOF
   "CN": "network-server",
   "hosts": [
     "127.0.0.1",
+    "10.1.1.1",
     "$ip"
   ],
   "key": {
@@ -167,6 +168,7 @@ cat > server-csr.json <<EOF
   "CN": "grpc-server",
   "hosts": [
     "127.0.0.1",
+    "10.1.1.1",
     "$ip"
   ],
   "key": {

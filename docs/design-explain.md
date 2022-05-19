@@ -1,11 +1,13 @@
-## 功能 & 设计概述
+English | [简体中文](./design-explain.md_CN.md)
 
-* [功能 &amp; 设计概述](#功能--设计概述)
-  * [持久层设计](#持久层设计)
-  * [应用层功能增强](#应用层功能增强)
-* [后期迭代](#后期迭代)
+## Function & Design Overview
 
-### 持久层设计
+* [Function &amp; Design Overview](#function--design-overview)
+  * [Persistence layer design](#persistence-layer-design)
+  * [Application layer function enhancement](#application-layer-function-enhancement)
+* [Later iterations](#later-iterations)
+
+### Persistence layer design
 
 > sqlite
 
@@ -13,7 +15,7 @@
 sqlite3 /tmp/litekube-nc.db
 ```
 
-- sqlite表network_mgr、token_mgr结构设计
+- sqlite table network_mgr, token_mgr structure design
 
 ```sql
 create table if not exists "network_mgr" (
@@ -35,8 +37,8 @@ create table if not exists "token_mgr" (
 )
 ```
 
-- update_time触发器
-  - 由于sqlite不支持on update关键字，故定义update_time_trigger实现update_time功能
+- update_time trigger
+  - Since sqlite does not support the 'on update' keyword, define update_time_trigger to implement the update_time function
 
 ```sql
 CREATE TRIGGER if not exists update_time_trigger UPDATE OF id,token,state,bind_ip,create_time ON network_mgr
@@ -50,53 +52,52 @@ BEGIN
 END
 ```
 
-### 应用层功能增强
+### Application layer function enhancement
 
-- 控制面板基于tcp gRPC+protobuf实现通信交互服务
-  - 安全通信，支持tls
-- 分离grpc和network两套证书
-- 获取本机已连接的network ip（连接过且未取消注册的）
-- 可通过设置摧毁网络，主机自动DHCP到全新的ip，后续重连ip依旧与主机绑定，任意一台服务器，重连以后具有稳定的ip 
-  - 信任节点申请bootstrap token后，新注册的node需要携带该bootstrap token注册
-    - bootstrap token的具有时效性，用户可以指定过期时间（单位为min），默认10min内
-      - goroutine每隔10min检查过期token，并删除
-  - 新注册的node需要携带bootstrap token注册
-    - server端统一认证
-      - 检查bootstrap token的合法性后，network manager端生成unique token并和组网ip绑定
-      - 返回node-token以及grpc+network两套证书
-  - 此处的问题在于，需要保留ip，可能存在ip不足的问题，采用LRU策略，根据update_time删除最久没使用的ip
-    - ippool相当于cache，和sqlite数据保持同步
-      - server启动开启cache同步协程，将sqlite持久化数据映射到cache中
-    - 分发新token的network ip的处理办法
-      - 首先查询sqlite，根据token检查是否已经存在bindIp
-        - 有：直接用bindip
-        - 无：从cache中找未分配的ip
-          - 找到：则分发，并同步cache=1，同步sqlite
-          - 没找到（ip不足）：按照LRU策略，从sqlite中找到idle最久的ip，释放，删除旧条目，无需同步cache（ip分给新的token了
-- 可注销注册(删除服务器连接，下次建立连接可以生成别的ip)
-  - 取消node和组网ip绑定，删除sqlite条目，同步cache=0
-- yaml格式的配置文件 client.yml/server.yml，具体字段含义见配置文件注释
-  - 网段可任意指定，配置文件中networkAddr字段
-- 可查询网络状态(失联，连接等)
-- 为了便于LiteKube交互使用，初始设置一个特殊的node-token，设置值为 "reserverd" (非16位避免被占用），整个网段只会有一台
-  node-token="reserverd"总是假定为已经完成了bootstrap，即认为存储有node-token="reserverd"的机器，应该已经具备了client证书
-  - network server启动时goroutine校验，无此条目则插入
+- The control panel realizes communication interaction service based on TCP gRPC+ Protobuf protocol
+  - Secure communication, support TLS
+- Separate grpc and network certificates
+- Get the connected network ip of node (connected and not unregistered)
+- The network can be destroyed by setting, the host automatically DHCP to a new ip, and the subsequent reconnection ip is still bound to the host, any server has a stable ip after reconnection
+  - After the trusted node applies for the bootstrap token, the newly registered node needs to carry the bootstrap token to register
+    - The bootstrap token is time-sensitive, the user can specify the expiration time (unit is min), the default is within 10 minutes
+      - goroutine checks for expired tokens every 10 minutes and deletes them
+  - A newly registered node must carry the Bootstrap token for registration
+    - Server-side unified authentication
+      - After checking the validity of the bootstrap token, the network manager generates a unique token and binds it to the networking ip
+      - Return node-token and grpc+network certificates
+  - The problem here is that the IP needs to be reserved, and there may be a problem of insufficient IP. The LRU strategy is adopted to delete the IP that has not been used for the longest time according to update_time.
+    - ippool is equivalent to cache, keeping synchronization with sqlite data
+      - The server starts the cache synchronization goroutine and maps the sqlite persistent data to the cache
+    - How to distribute the network ip of the new token?
+      - First query sqlite, check whether bindIp already exists according to the token
+        - Yes: use bindip directly
+        - No: find unassigned ip from cache
+          - Found: distribute, synchronize cache=1, synchronize sqlite
+          - Not found (insufficient ip): According to the LRU strategy, find the longest idle ip from sqlite, release and delete the old entry, no need to synchronize the cache (the ip is assigned to a new token)
+- Unregister (close server connection, next time establish connection can generate other IP)
+  - Cancel the node and networking ip binding, delete the sqlite entry, synchronize cache=0
+- client.yml/server.yml configuration file in YAML format. For the specific field meanings, see the configuration file notes
+  -  The network segment can be arbitrarily specified: networkAddr field in the configuration file
+- Network status can be queried (disconnected, connected, etc.)
+- In order to facilitate the interactive use of LiteKube, a special node-token is initially set to "reserverd" (non-16-bit to avoid being occupied), and there will only be one node-token in the entire network segment. node-token="reserverd" always assumes that bootstrap has been completed, that is, the machine that stores node-token="reserverd" should already have a client certificate
+  - When the network server starts, a goroutine check is started, and if there is no such entry, it is inserted
+- log rotate
+  - The logs are written to the file in days, and the logs are saved only in the last seven days
+  - Define the main log file to get the latest logs
+- Network-controller gRPC CLI tool ncadm development
 
-## 后期迭代
+## Later iterations
 
-> 确定部分
+> Definite part
 
-- 日志向上对齐，logging改为klog
-- 多网段
-  - 可预先配置的+可通过grpc请求动态增加网段
-  
-  - 节点携带node-token和net-token表明节点身份和期待加入的网络
-    - 具有不同的net-token的网络互不干扰
+- Multi-subnet
+  - Pre-configurable + dynamically increase network segment via grpc request
 
-> 待验证部分
+  - The node carries the node-token and net-token to indicate the identity of the node and the network it expects to join
+    - Networks with different net-tokens do not interfere with each other
 
-- network-server多副本、高可用，支持client端自动切换network-server
-  - 涉及到数据迁移、“脑裂”问题，后期工作验证合理性、可行性
+> Part to be verified
 
-- （如果需要）network-controller gRPC CLI 工具
-  - 此处可以使用开源grpcurl工具代替
+- network-server has multiple replicas, high availability, and supports automatic switching of network-server on the client side
+  - Involving data migration and "split brain" issues, the later work will verify the rationality and feasibility
