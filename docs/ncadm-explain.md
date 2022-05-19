@@ -1,6 +1,6 @@
 # ncadm
 
-[ncadm](./cmd/ncadm), a commond-line tool to control node join to litekube network-controller
+[ncadm](../cmd/ncadm), a commond-line tool to control node join to litekube network-controller
 
 ## build & installation
 
