@@ -18,7 +18,7 @@ A network controller implementation over websockets. This is the client/server i
 
 ## Adm tool
 
-[ncadm](https://github.com/Litekube/ncadm), a commond-line tool to control node join to litekube network-controller
+[ncadm](./docs/ncadm-explain.md), a commond-line tool to control node join to litekube network-controller
 
 ## Pre-work
 
