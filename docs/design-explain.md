@@ -1,4 +1,4 @@
-English | [简体中文](./design-explain.md_CN.md)
+English | [简体中文](./design-explain_CN.md)
 
 ## Function & Design Overview
 
@@ -93,7 +93,6 @@ END
 
 - Multi-subnet
   - Pre-configurable + dynamically increase network segment via grpc request
-
   - The node carries the node-token and net-token to indicate the identity of the node and the network it expects to join
     - Networks with different net-tokens do not interfere with each other
 

@@ -202,7 +202,7 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key 
 
 | parameters | type   | meaning    | required | demo             |
 | ---------- | ------ | ---------- | -------- | ---------------- |
-| token      | string | node-token |          | b52f93d3f0ec4be7 |
+| token      | string | node-token | yes      | b52f93d3f0ec4be7 |
 
 - CheckConnStateResponse 
 
