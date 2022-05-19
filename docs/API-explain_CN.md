@@ -1,20 +1,20 @@
-English | [简体中文](./API-explain.md_CN.md)
+简体中文 | [English](./API-explain.md)
 
-## gRPC API Doc
+## gRPC接口说明
 
-* [gRPC API Doc](#grpc-api-doc)
-  * [Overview](#overview)
-  * [grpcurl tool](#grpcurl-tool)
-  * [APIs](#apis)
-    * [Bootstrap Register：GetBootStrapToken](#bootstrap-registergetbootstraptoken)
-    * [Node register: GetToken](#node-register-gettoken)
-    * [Node unregister: UnRegister](#node-unregister-unregister)
-    * [Check node connection state: CheckConnState](#check-node-connection-state-checkconnstate)
-    * [Get connected node ip: GetRegistedIp](#get-connected-node-ip-getregistedip)
+* [gRPC接口说明](#grpc接口说明)
+  * [概述](#概述)
+  * [grpcurl工具](#grpcurl工具)
+  * [接口列表](#接口列表)
+    * [Bootstrap注册 GetBootStrapToken](#bootstrap注册-getbootstraptoken)
+    * [节点注册 GetToken](#节点注册-gettoken)
+    * [节点取消注册 UnRegister](#节点取消注册-unregister)
+    * [检查连接状态 CheckConnState](#检查连接状态-checkconnstate)
+    * [获取连接节点ip GetRegistedIp](#获取连接节点ip-getregistedip)
 
-### Overview
+### 概述
 
-Realize communication interaction service based on tcp gRPC+protobuf, support tls secure communication
+基于tcp gRPC+protobuf实现通信交互服务，支持tls安全通信
 
 ```
 service LiteKubeNCService {
@@ -26,15 +26,15 @@ service LiteKubeNCService {
 }
 ```
 
-- status code explaination
+- 状态码code说明
 
-| status code       |      | meaning                              |
-| ----------------- | ---- | ------------------------------------ |
-| STATUS_OK         | 200  | success                              |
-| STATUS_BADREQUEST | 400  | the client parameters are not normal |
-| STATUS_ERR        | 500  | server Internal logic error          |
+| code枚举类型      | 值   | 含义               |
+| ----------------- | ---- | ------------------ |
+| STATUS_OK         | 200  | 成功               |
+| STATUS_BADREQUEST | 400  | 客户端参数不规范   |
+| STATUS_ERR        | 500  | 服务器内部逻辑错误 |
 
-### grpcurl tool
+### grpcurl工具
 
 > installation
 
@@ -58,17 +58,17 @@ cp grpcurl /usr/sbin/
 - without tls
 
 ```shell
-# Query the Service List
+# 查看服务列表
 grpcurl -plaintext 101.43.253.110:6440 list pb.LiteKubeNCService
 
-# Query a request
+# 查看请求
 grpcurl -plaintext 101.43.253.110:6440 describe pb.LiteKubeNCService.HelloWorld
 
-# Query Parameters;
+# 查看参数
 grpcurl -plaintext 101.43.253.110:6440 describe pb.HelloWorldRequest 
 grpcurl -plaintext 101.43.253.110:6440 describe pb.HelloWorldResponse
 
-# grpc call
+# grpc调用
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState
 
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCService.UnRegister
@@ -84,7 +84,7 @@ grpcurl -d '{"expireTime": 10}' -plaintext 101.43.253.110:6440 pb.LiteKubeNCServ
 - support tls
 
 ```shell
-# grpc call
+# grpc调用
 grpcurl -d '' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.HealthCheck
 
 grpcurl -d '' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.HealthCheck
@@ -104,11 +104,11 @@ grpcurl -d '{"bootStrapToken": "65bdd99bf8904634"}' -cacert ca.pem -cert client.
 grpcurl -d '{"expireTime": -1}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
 
-### APIs
+### 接口列表
 
-#### Bootstrap Register：GetBootStrapToken
+#### Bootstrap注册 GetBootStrapToken
 
-- demo：Get a Bootstrap token with an expiration time of 10 minutes
+- demo：获取一个过期时间为10min的Bootstrap token
 
 ```shell
 grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
@@ -116,13 +116,13 @@ grpcurl -d '{"expireTime": 10}' -cacert ca.pem -cert client.pem -key client-key.
 grpcurl -d '{"expireTime": -1}' -cacert ca.pem -cert client.pem -key client-key.pem  101.43.253.110:6440 pb.LiteKubeNCService.GetBootStrapToken
 ```
 
-- GetBootStrapTokenRequest pameters
+- GetBootStrapTokenRequest参数
 
-| parameters | type  | meaning     | required | demo                                        |
-| ---------- | ----- | ----------- | -------- | ------------------------------------------- |
-| expireTime | int32 | expire time | no       | 10（A negative number means no expiration） |
+| **参数**   | 类型  | 含义     | 是否必须 | demo                 |
+| ---------- | ----- | -------- | -------- | -------------------- |
+| expireTime | int32 | 过期时间 | 否       | 10（负数表示不过期） |
 
-- GetBootStrapTokenResponse data
+- GetBootStrapTokenResponse返回数据
 
 ```json
 {
@@ -134,9 +134,9 @@ grpcurl -d '{"expireTime": -1}' -cacert ca.pem -cert client.pem -key client-key.
 }
 ```
 
-#### Node register: GetToken
+#### 节点注册 GetToken
 
-- demo
+- demo：节点注册node-token
 
 ```shell
 grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
@@ -144,13 +144,13 @@ grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -insecure 101.43.253.110:643
 grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6439 pb.LiteKubeNCBootstrapService.GetToken
 ```
 
-- GetTokenRequest parameters
+- GetTokenRequest参数
 
-| parameters     | type   | meaning         | required | demo             |
+| **参数**       | 类型   | 含义            | 是否必须 | demo             |
 | -------------- | ------ | --------------- | -------- | ---------------- |
-| bootStrapToken | string | bootstrap token | yes      | deac5f329feb4729 |
+| bootStrapToken | string | bootstrap token | 是       | deac5f329feb4729 |
 
-- GetTokenResponse data（The certificate fields are base64 encoded）
+- GetTokenResponse返回数据（证书字段均为base64编码）
 
 ```JSON
 {
@@ -166,21 +166,21 @@ grpcurl -d '{"bootStrapToken": "deac5f329feb4729"}' -cacert ca.pem -cert client.
 }
 ```
 
-#### Node unregister: UnRegister
+#### 节点取消注册 UnRegister
 
-- demo：Cancel the registration binding of node-token as b52f93d3f0ec4be7
+- demo：取消node-token为b52f93d3f0ec4be7的注册绑定
 
 ```shell
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState
 ```
 
-- UnRegisterRequest parameters
+- UnRegisterRequest参数
 
-| parameters | type   | meaning    | required | demo             |
-| ---------- | ------ | ---------- | -------- | ---------------- |
-| token      | string | node-token | yes      | b52f93d3f0ec4be7 |
+| **参数** | 类型   | 含义       | 是否必须 | demo             |
+| -------- | ------ | ---------- | -------- | ---------------- |
+| token    | string | node-token | 是       | b52f93d3f0ec4be7 |
 
-- UnRegisterResponse data
+- UnRegisterResponse返回数据
 
 ```json
 {
@@ -190,21 +190,21 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key 
 }
 ```
 
-#### Check node connection state: CheckConnState
+#### 检查连接状态 CheckConnState
 
-- demo：Get the connection status with node-token as b52f93d3f0ec4be7
+- demo：获取node-token为b52f93d3f0ec4be7的连接状态
 
 ```shell
 grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key client-key.pem 101.43.253.110:6440 pb.LiteKubeNCService.CheckConnState
 ```
 
-- CheckConnStateRequest parameters
+- CheckConnStateRequest参数
 
-| parameters | type   | meaning    | required | demo             |
-| ---------- | ------ | ---------- | -------- | ---------------- |
-| token      | string | node-token |          | b52f93d3f0ec4be7 |
+| **参数** | 类型   | 含义       | 是否必须 | demo             |
+| -------- | ------ | ---------- | -------- | ---------------- |
+| token    | string | node-token | 是       | b52f93d3f0ec4be7 |
 
-- CheckConnStateResponse 
+- CheckConnStateResponse返回数据
 
 ```json
 {
@@ -215,15 +215,15 @@ grpcurl -d '{"token": "b52f93d3f0ec4be7"}' -cacert ca.pem -cert client.pem -key 
 }
 ```
 
-> connState status code
+> connState状态码
 
-| connState status code | value | meaning                         |
-| --------------------- | ----- | ------------------------------- |
-| STATE_IDLE            | -1    | close                           |
-| STATE_INIT            | 1     | init connect, not connected yet |
-| STATE_CONNECTED       | 3     | connected                       |
+| connState枚举类型 | 值   | 含义           |
+| ----------------- | ---- | -------------- |
+| STATE_IDLE        | -1   | 断连状态       |
+| STATE_INIT        | 1    | 初始化连接阶段 |
+| STATE_CONNECTED   | 3    | 保持连接       |
 
-#### Get connected node ip: GetRegistedIp
+#### 获取连接节点ip GetRegistedIp
 
-CheckConnState interface can be reused
+可以复用CheckConnState接口
 

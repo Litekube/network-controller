@@ -30,7 +30,7 @@ English | [简体中文](./network-controller-explain_CN.md)
 
 ### Virtual NICs & Routing
 
-- server端
+- server
   - The request destined for 10.1.1.0/24 is routed to gateway 10.1.1.2 and then 0.0.0.0(flag=host)
 
 ```shell
