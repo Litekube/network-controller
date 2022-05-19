@@ -2,6 +2,8 @@
 
 # network-controller使用demo
 
+使用用例在/example目录下
+
 * [network-controller使用demo](#network-controller使用demo)
     * [前置工作](#前置工作)
     * [network部分](#network部分)

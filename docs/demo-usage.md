@@ -2,6 +2,8 @@ English | [简体中文](./demo-usage_CN.md)
 
 # network-controller usage demo
 
+The use case is in the /example directory
+
 * [network-controller usage demo](#network-controller-usage-demo)
    * [Pre-work](#pre-work)
    * [network part](#network-part)
